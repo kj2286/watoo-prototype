@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>watoo v7 — 디자인 충실 프로토타입</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    background:#171512; color:#222;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;
+    display:flex; justify-content:center; align-items:flex-start; gap:36px;
+    min-height:100vh; padding:28px 16px 90px;
+  }
+  svg { vertical-align:-2px; }
+  .phone {
+    width:390px; height:820px; flex:none;
+    background:#FFF9E8; border-radius:46px; border:9px solid #000;
+    overflow:hidden; position:relative;
+    box-shadow:0 30px 80px rgba(0,0,0,.55);
+  }
+  .screen { position:absolute; inset:0; overflow-y:auto; display:none; background:#FFF9E8; padding-bottom:110px; }
+  .screen.on { display:block; }
+  .statusbar { display:flex; justify-content:space-between; align-items:center; padding:14px 26px 6px; font-size:14px; font-weight:700; }
+  .content { padding:8px 20px 0; }
+  .logo { font-weight:800; letter-spacing:-.5px; }
+  h1.title { font-size:24px; font-weight:800; letter-spacing:-.6px; line-height:1.3; }
+  p.sub { font-size:14px; color:#8a8272; line-height:1.55; margin-top:8px; }
+  .tiny { font-size:11.5px; color:#b3a98f; }
+  .btn {
+    display:block; width:100%; border:none; cursor:pointer;
+    background:#FFC93F; color:#222; font-weight:800; font-size:17px;
+    padding:16px 20px; border-radius:24px; margin-top:14px;
+    font-family:inherit; letter-spacing:-.3px; transition:transform .08s;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn.ghost { background:#F1E8CF; }
+  .chip { display:inline-block; background:#F4EAD0; border-radius:999px; padding:6px 13px; font-size:13px; font-weight:700; color:#6b6350; margin:3px 2px; }
+  .card { background:#fff; border-radius:22px; padding:16px; box-shadow:0 2px 10px rgba(80,60,20,.06); margin-top:12px; }
+
+  /* ── 헤더 (Figma: 노란 원 + 검정 4점) ── */
+  .head { display:flex; align-items:center; gap:14px; padding:10px 2px 4px; }
+  .head .tab { font-size:23px; font-weight:800; letter-spacing:-.5px; color:#c9bfa4; cursor:pointer; }
+  .head .tab.on { color:#FF5226; }
+  .head .icons { margin-left:auto; display:flex; gap:12px; align-items:center; }
+  .head .circleY {
+    width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:#F5A623; color:#fff; display:flex; align-items:center; justify-content:center;
+  }
+  .head .plainI { background:none; border:none; cursor:pointer; color:#1d1d1d; padding:4px; }
+
+  /* ── 오늘의 운세 요약 카드 ── */
+  .hanmadi { background:#fff; border-radius:20px; padding:13px 15px; margin-top:10px; box-shadow:0 2px 10px rgba(80,60,20,.06); cursor:pointer; }
+  .hanmadi .row1 { display:flex; gap:11px; align-items:center; }
+  .hanmadi .mini { width:42px; height:42px; flex:none; }
+  .hanmadi b { font-size:11.5px; color:#b3a98f; font-weight:700; display:block; }
+  .hanmadi .msg { font-size:14.5px; font-weight:700; letter-spacing:-.3px; line-height:1.35; margin-top:2px; }
+  .hanmadi .foot { font-size:12px; color:#a89b85; margin-top:9px; font-weight:600; }
+
+  /* ── 할 일 카드: 돔형 + 상단 탭 (Figma main_screen_card) ── */
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-top:14px; }
+  .tcard {
+    border-radius:48% 48% 26px 26px / 34% 34% 26px 26px;
+    padding:34px 14px 18px; cursor:pointer; position:relative;
+    display:flex; flex-direction:column; align-items:center; gap:9px;
+    transition:transform .08s; min-height:158px; user-select:none;
+  }
+  .tcard::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:24px; height:13px; border-radius:0 0 8px 8px; background:rgba(0,0,0,.16); }
+  .tcard:active { transform:scale(.96); }
+  .tcard > svg { width:54px; }
+  .tcard .ttext { font-size:12.5px; font-weight:700; color:rgba(20,10,0,.72); text-align:center; line-height:1.5; letter-spacing:-.2px; word-break:keep-all; }
+  .tcard .marks { position:absolute; top:12px; left:12px; right:12px; display:flex; justify-content:space-between; }
+  .tcard .pubmark { background:rgba(255,255,255,.55); border-radius:99px; padding:3px 6px; color:#3d3428; display:inline-flex; align-items:center; gap:2px; }
+  .tcard .cheermark { background:rgba(255,255,255,.88); border-radius:99px; padding:3px 8px; font-weight:800; font-size:11px;
+    box-shadow:0 1px 4px rgba(0,0,0,.12); display:inline-flex; align-items:center; gap:4px; }
+
+  .addbtn {
+    position:absolute; bottom:26px; left:50%; transform:translateX(-50%); z-index:20;
+    width:78px; height:56px; border-radius:99px; border:none; cursor:pointer;
+    background:#fff; color:#222; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.22);
+  }
+  .setbtn {
+    position:absolute; bottom:30px; right:20px; z-index:20;
+    width:48px; height:48px; border-radius:16px; border:none; cursor:pointer;
+    background:#1d1d1d; color:#FFF3D6; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+  }
+
+  /* ══ 할 일 추가/수정 모달 ══ */
+  .addmodal { position:absolute; inset:0; z-index:40; display:none; }
+  .addmodal.on { display:block; }
+  .amdim { position:absolute; inset:0; background:rgba(72,70,44,.6); }
+  .amwrap { position:absolute; left:0; right:0; bottom:0; top:110px; display:flex; flex-direction:column;
+    animation:rise .32s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes rise { from{transform:translateY(60px);opacity:.4} to{transform:translateY(0);opacity:1} }
+  .addcard {
+    flex:1; border-radius:200px 200px 0 0; position:relative;
+    padding:66px 24px 12px; display:flex; flex-direction:column; align-items:center;
+    transition:background .3s;
+  }
+  .pin { position:absolute; top:24px; left:50%; transform:translateX(-50%);
+    width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.4);
+    display:flex; align-items:center; justify-content:center; color:#7a2c12;
+    border:none; cursor:pointer; transition:all .15s; }
+  .pin.on { background:#fff; color:#1d1d1d; box-shadow:0 3px 10px rgba(0,0,0,.2); }
+  .cheerchip { border:none; cursor:pointer; background:rgba(255,255,255,.88);
+    border-radius:99px; padding:9px 13px; font-family:inherit; font-weight:800;
+    font-size:13px; color:#3d3428; display:inline-flex; align-items:center; gap:5px; }
+  .chrow { display:flex; align-items:center; gap:12px; background:#fff; border-radius:18px;
+    padding:12px 14px; margin-top:10px; cursor:pointer; }
+  .chrow .blob { width:44px; height:44px; }
+  .chrow .who { font-size:14.5px; font-weight:800; letter-spacing:-.2px; }
+  .chrow .sub2 { font-size:12px; color:#a89b85; font-weight:600; margin-top:1px; }
+  .chrow .rx { margin-left:auto; color:#6b6350; }
+  .rrow { display:flex; gap:4px; margin-top:2px; flex-wrap:wrap; justify-content:center; }
+  .rrow button { border:none; cursor:pointer; background:rgba(255,255,255,.78);
+    border-radius:99px; padding:5px 9px; font-size:11px; font-weight:800; color:#3d3428;
+    font-family:inherit; display:inline-flex; align-items:center; gap:3px; transition:transform .08s; }
+  .rrow button:active { transform:scale(1.15); }
+  .rrow button.sent { background:#1d1d1d; color:#FFF3D6; }
+  .am-head { font-size:21px; font-weight:800; color:#1d1d1d; letter-spacing:-.5px; }
+  .am-face { margin:20px 0 4px; } .am-face svg { width:150px; }
+  .am-slider { width:84%; position:relative; height:44px; cursor:pointer; margin-top:14px; touch-action:none; }
+  .am-track { position:absolute; top:20px; left:0; right:0; height:4px; background:#1d1d1d; border-radius:99px; }
+  .am-dot { position:absolute; top:16px; width:12px; height:12px; border-radius:50%;
+    background:#fff; border:3px solid #1d1d1d; transform:translateX(-50%); }
+  .am-knob { position:absolute; top:7px; width:30px; height:30px; border-radius:10px;
+    background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.3);
+    display:flex; align-items:center; justify-content:center;
+    transform:translateX(-50%); transition:left .12s; }
+  .am-knob::after { content:''; width:9px; height:9px; border-radius:50%; background:#1d1d1d; }
+  .am-cheerbox { width:100%; background:rgba(255,255,255,.88); border-radius:18px;
+    padding:11px 15px; display:none; align-items:center; gap:8px;
+    font-size:13px; font-weight:800; margin-bottom:8px; }
+  .am-cheerbox b { color:#a49a80; font-size:11.5px; flex:none; }
+  .am-cheerbox .hint { margin-left:auto; font-size:10.5px; color:#b3a98f; font-weight:700; }
+  .am-tools { width:100%; display:flex; align-items:center; gap:10px; margin-top:auto; padding:0 2px 8px; }
+  .am-tools .rndbtn { width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:#1d1d1d; color:#fff; position:relative; display:flex; align-items:center; justify-content:center; }
+  .am-tools .rndbtn.off { opacity:.35; }
+  .am-tools .rndbtn .abadge { position:absolute; top:-5px; right:-5px; background:#FF3B30; color:#fff;
+    font-size:9px; font-weight:800; border-radius:99px; padding:2px 5px; }
+  .am-count { margin-left:auto; font-size:12px; color:rgba(0,0,0,.5); font-weight:800; }
+  .am-inputrow { width:100%; display:flex; gap:8px; background:#fff; border-radius:99px;
+    padding:6px 6px 6px 18px; align-items:center; margin-bottom:10px; }
+  .am-inputrow input { flex:1; border:none; outline:none; font-size:15px; font-weight:600; font-family:inherit; background:none; }
+  .am-check { width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:#e8e8e8; color:#aaa; flex:none; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; }
+  .am-check.ready { background:#1d1d1d; color:#fff; }
+  .kb { background:#D8C4C0; padding:6px 3px 0; flex:none; }
+  .krow { display:flex; gap:5px; justify-content:center; margin-top:7px; }
+  .key { background:#fff; border-radius:6px; min-width:30px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:600; color:#333; box-shadow:0 1px 0 rgba(0,0,0,.28); padding:0 7px; }
+  .key.gray { background:#C9AFAC; }
+  .key.wide { min-width:150px; }
+  .kbot { display:flex; justify-content:space-between; padding:8px 28px 0; color:#5a4c49; }
+  .homebar { width:140px; height:5px; background:#1d1d1d; border-radius:99px; margin:10px auto 8px; }
+
+  /* ── 알림 시간 팝업 ── */
+  .alarmpop { position:absolute; left:24px; right:24px; bottom:190px; z-index:45;
+    background:#fff; border-radius:22px; padding:16px 16px 14px;
+    box-shadow:0 14px 50px rgba(0,0,0,.35); display:none;
+    animation:pop .3s cubic-bezier(.2,.8,.2,1) both; }
+  .alarmpop.on { display:block; }
+  .alarmpop h5 { font-size:13px; color:#a49a80; font-weight:800; margin-bottom:8px; }
+  .wheels { display:flex; gap:4px; justify-content:center; }
+  .wheel { height:140px; overflow-y:auto; flex:1; scrollbar-width:none; text-align:center;
+    -webkit-mask-image:linear-gradient(transparent, #000 30%, #000 70%, transparent);
+    mask-image:linear-gradient(transparent, #000 30%, #000 70%, transparent); }
+  .wheel::-webkit-scrollbar { display:none; }
+  .wheel div { padding:8px 0; font-size:17px; font-weight:600; color:#c5c5c5; cursor:pointer; border-radius:10px; }
+  .wheel div.sel { color:#111; background:#F2F2F2; font-weight:800; }
+  .days { display:flex; gap:6px; justify-content:center; margin-top:12px; }
+  .days button { width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
+    background:#F2ECD9; color:#8a8272; font-family:inherit; font-weight:800; font-size:13px; }
+  .days button.on { background:#FF5226; color:#fff; }
+  .alarmpop .foot2 { display:flex; gap:8px; margin-top:14px; }
+  .alarmpop .foot2 button { flex:1; border:none; cursor:pointer; font-family:inherit; font-weight:800;
+    font-size:14px; padding:12px; border-radius:14px; }
+  .alarmpop .cancel { background:#F2F2F2; color:#888; }
+  .alarmpop .save { background:#1d1d1d; color:#fff; }
+
+  /* ══ 완료한 일 ══ */
+  .seg { display:inline-flex; background:#fff; border:1.5px solid #eadfc2; border-radius:14px; overflow:hidden; }
+  .seg button { border:none; background:none; padding:9px 19px; font-weight:800; font-size:15px;
+    color:#8a8272; font-family:inherit; cursor:pointer; border-right:1.5px solid #eadfc2; }
+  .seg button:last-child { border-right:none; }
+  .seg button.on { color:#FF5226; }
+  .segrow { display:flex; align-items:center; margin-top:12px; }
+  .segrow .trash { margin-left:auto; background:none; border:none; cursor:pointer; color:#1d1d1d; }
+  .datehead { display:flex; align-items:center; gap:10px; margin-top:24px; font-size:19px; font-weight:800; letter-spacing:-.3px; }
+  .datehead button { background:none; border:none; cursor:pointer; color:#1d1d1d; }
+  .drow { display:flex; align-items:center; gap:10px; border-radius:28px; padding:14px 14px 14px 16px; margin-top:10px; }
+  .drow > svg { width:46px; flex:none; }
+  .drow .dtext { flex:1; font-size:13px; font-weight:700; color:rgba(20,10,0,.75); line-height:1.5;
+    overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
+  .drow .undo { width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(0,0,0,.14); color:#222; flex:none; display:flex; align-items:center; justify-content:center; }
+  .weekhead { display:flex; align-items:center; gap:10px; margin-top:22px; font-size:19px; font-weight:800; letter-spacing:-.3px; }
+  .weekhead button { background:none; border:none; cursor:pointer; color:#1d1d1d; }
+  .wbox { position:relative; overflow:hidden; border-radius:26px; height:190px; margin-top:10px; }
+  .wball { position:absolute; left:0; top:0; width:36px; height:36px;
+    border-radius:46% 54% 52% 48% / 52% 46% 54% 48%;
+    display:flex; align-items:center; justify-content:center; will-change:transform; }
+  .wball svg { width:72%; }
+  .wdown { position:absolute; right:12px; bottom:12px; z-index:5;
+    width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(0,0,0,.13); color:#333; display:flex; align-items:center; justify-content:center; }
+  .gyronote { font-size:12px; color:#b3a98f; font-weight:600; margin-top:10px; text-align:center; }
+
+  /* ══ 설정 ══ */
+  .set-top { position:relative; height:150px; }
+  .set-top .blob { position:absolute; }
+  .set-sheet { background:#FDFCF7; border-radius:26px 26px 0 0; padding:20px 22px 30px; min-height:600px; }
+  .prem-pill { display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+    background:#111; color:#fff; border:none; cursor:pointer; font-family:inherit;
+    font-weight:800; font-size:16.5px; padding:17px; border-radius:99px; letter-spacing:-.3px; }
+  .prem-pill .crown { width:24px; height:24px; border-radius:50%; background:#F5A623;
+    display:flex; align-items:center; justify-content:center; color:#fff; }
+  .srow { display:flex; align-items:center; padding:19px 2px; font-size:16.5px; font-weight:700;
+    letter-spacing:-.3px; cursor:pointer; }
+  .srow .rt { margin-left:auto; display:flex; align-items:center; gap:9px; font-size:15px; color:#4A7BD0; font-weight:700; }
+  .srow .chev { color:#222; font-size:17px; font-weight:800; }
+  .srow .chevd { width:22px; height:22px; border-radius:50%; background:#4A7BD0; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .srow .swatch { width:30px; height:30px; border-radius:9px; border:1px solid #eee; }
+  .srow.dim2 { color:#c0b9a4; cursor:default; }
+  .srow .ver { margin-left:auto; color:#c0b9a4; font-weight:700; }
+  .sethead4 { font-size:12px; color:#b3a98f; font-weight:800; margin:16px 0 2px; letter-spacing:.3px; }
+  .setdivider { height:1px; background:#f0ead6; }
+  .idea-btn { display:inline-flex; align-items:center; gap:8px; background:#FF5226; color:#fff;
+    border:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:15px;
+    padding:13px 20px; border-radius:99px; margin-top:26px; }
+  .set-x { position:absolute; bottom:30px; right:20px; width:44px; height:44px; border-radius:50%;
+    border:none; cursor:pointer; background:#111; color:#fff; z-index:20;
+    display:flex; align-items:center; justify-content:center; }
+
+  .plan { display:flex; align-items:center; gap:12px; border:2px solid #eee4cb; border-radius:20px;
+    padding:15px 16px; margin-top:10px; cursor:pointer; background:#fff; position:relative; }
+  .plan.sel { border-color:#111; }
+  .plan .pname { font-size:16px; font-weight:800; }
+  .plan .pdesc { font-size:12px; color:#a89b85; font-weight:600; margin-top:2px; }
+  .plan .price { margin-left:auto; text-align:right; font-size:16px; font-weight:800; }
+  .plan .per { font-size:11px; color:#a89b85; font-weight:600; }
+  .plan .best { position:absolute; top:-9px; left:16px; background:#FF5226; color:#fff;
+    font-size:10.5px; font-weight:800; border-radius:99px; padding:3px 9px; }
+
+  /* ══ 위젯 ══ */
+  #scr-widget { background:#1a1b20; }
+  #scr-widget .statusbar { color:#fff; }
+  .wg-caption { color:#8e929f; font-size:12.5px; font-weight:700; margin:16px 4px 6px; }
+  .widget-md { background:#FFF6DC; border-radius:30px; padding:12px; }
+  .wg-row { display:flex; align-items:center; gap:8px; border-radius:99px; padding:8px 12px; margin-top:6px; }
+  .wg-row:first-child { margin-top:0; }
+  .wg-row svg { width:30px; flex:none; }
+  .wg-row span { font-size:12.5px; font-weight:700; color:rgba(20,10,0,.75);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .wg-plus { position:relative; }
+  .wg-plus .pl { position:absolute; right:6px; bottom:6px; width:40px; height:40px; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,.18); }
+  .wg-strip { display:flex; align-items:center; gap:8px; background:#111; color:#FFF3D6;
+    border-radius:99px; padding:9px 14px; margin-top:8px; font-size:12px; font-weight:700; }
+  .wg-small-wrap { display:flex; gap:14px; }
+  .widget-sm { width:150px; height:150px; background:#FFF6DC; border-radius:30px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; }
+  .widget-sm .blob { width:56px; height:56px; }
+  .widget-sm .t1 { font-size:12px; font-weight:800; }
+  .widget-sm .t2 { font-size:10.5px; color:#a89b85; font-weight:700; }
+  .widget-sm .cb { background:#111; color:#FFF3D6; border-radius:99px; font-size:10.5px;
+    font-weight:800; padding:4px 10px; display:inline-flex; align-items:center; gap:4px; }
+
+  /* ── 모두의 할 일 ── */
+  .filters { display:flex; gap:8px; margin-top:12px; overflow-x:auto; }
+  .filters button { border:none; background:#F1E8CF; color:#6b6350; font-family:inherit; font-weight:800;
+    font-size:13px; padding:9px 15px; border-radius:99px; cursor:pointer; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:5px; }
+  .filters button.on { background:#222; color:#FFF3D6; }
+  .pcard { background:#fff; border-radius:22px; padding:15px 16px; margin-top:12px; box-shadow:0 2px 10px rgba(80,60,20,.06); position:relative; }
+  .pcard .top { display:flex; gap:12px; align-items:center; }
+  .pcard .blob { width:48px; height:48px; }
+  .pcard .who { font-size:14px; font-weight:800; letter-spacing:-.2px; }
+  .pcard .type { font-size:12px; color:#a89b85; font-weight:600; margin-top:1px; display:flex; align-items:center; gap:4px; }
+  .pcard .fav { margin-left:auto; background:none; border:none; cursor:pointer; color:#d8cfb4; }
+  .pcard .fav.on { color:#F5A623; }
+  .pcard .ptext { font-size:15.5px; font-weight:700; letter-spacing:-.3px; margin-top:11px; line-height:1.45; }
+  .pcard .trans { font-size:12px; color:#6FA8F5; font-weight:700; cursor:pointer; margin-top:4px; display:inline-block; }
+  .reacts { display:flex; gap:8px; margin-top:12px; }
+  .reacts button { border:none; background:#F8F1DC; font-family:inherit; cursor:pointer;
+    font-size:13px; font-weight:800; color:#6b6350; padding:8px 13px; border-radius:99px;
+    transition:transform .08s; display:inline-flex; align-items:center; gap:5px; }
+  .reacts button:active { transform:scale(1.15); }
+  .reacts button.sent { background:#FFC93F; color:#222; }
+
+  /* ── blob / sheet / toast ── */
+  .blob { border-radius:46% 54% 52% 48% / 52% 46% 54% 48%;
+    display:flex; align-items:center; justify-content:center; position:relative; flex:none; }
+  .blob svg { width:66%; display:block; }
+  .badge { position:absolute; right:-5px; top:-5px; background:#fff; border-radius:50%; width:30px; height:30px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+  .dim { position:absolute; inset:0; background:rgba(20,15,5,.45); display:none; z-index:30; }
+  .dim.on { display:block; }
+  .sheet { position:absolute; left:0; right:0; bottom:-110%; z-index:31;
+    background:#FFF9E8; border-radius:30px 30px 0 0; padding:24px 22px 32px;
+    transition:bottom .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on { bottom:0; }
+  .sheet .handle { width:44px; height:5px; background:#e5dabc; border-radius:99px; margin:0 auto 16px; }
+  .switchrow { display:flex; align-items:center; gap:12px; margin-top:14px; background:#fff; border-radius:18px; padding:14px 16px; }
+  .switchrow .lab b { font-size:15px; font-weight:800; display:block; }
+  .sw { width:52px; height:31px; border-radius:99px; background:#e5dabc; position:relative; cursor:pointer; transition:background .2s; flex:none; margin-left:auto; }
+  .sw::after { content:''; position:absolute; top:3px; left:3px; width:25px; height:25px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  .sw.on { background:#8FBE3F; }
+  .sw.on::after { left:24px; }
+  .toast { position:absolute; left:50%; bottom:110px; transform:translateX(-50%) translateY(20px);
+    background:#222; color:#FFF3D6; font-size:13.5px; font-weight:700;
+    padding:12px 18px; border-radius:99px; opacity:0; pointer-events:none;
+    transition:all .25s; z-index:60; white-space:nowrap; max-width:350px; }
+  .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+  @keyframes pop { 0%{transform:scale(.6);opacity:0} 70%{transform:scale(1.04)} 100%{transform:scale(1);opacity:1} }
+  .pop { animation:pop .55s cubic-bezier(.2,.8,.2,1) both; }
+
+  /* ══ 운세 상세 모달 ══ */
+  .fmodal { position:absolute; inset:0; z-index:44; display:none; }
+  .fmodal.on { display:block; }
+  .fdim { position:absolute; inset:0; background:rgba(20,15,5,.62); }
+  .fcard { position:absolute; left:50%; top:82px; transform:translateX(-50%);
+    width:306px; height:522px; }
+  .ffront { position:absolute; inset:0; border-radius:28px; box-shadow:0 20px 60px rgba(0,0,0,.45);
+    background:#FFF9E8; padding:20px 18px 16px;
+    display:flex; flex-direction:column; text-align:center; }
+  .ftabs { display:flex; gap:3px; background:#F1E8CF; border-radius:99px; padding:3px; margin-top:9px; }
+  .ftabs button { flex:1; border:none; background:none; font-family:inherit; font-weight:800;
+    font-size:11.5px; padding:8px 2px; border-radius:99px; color:#8a8272; cursor:pointer; white-space:nowrap; }
+  .ftabs button.on { background:#fff; color:#222; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+  .ff-scroll { flex:1; overflow-y:auto; scrollbar-width:none; }
+  .ff-scroll::-webkit-scrollbar { display:none; }
+  .ff-date { font-size:12px; color:#a89b85; font-weight:700; }
+  .ff-type { font-size:16px; font-weight:800; margin-top:2px; }
+  .ff-stars { color:#F5A623; font-size:18px; letter-spacing:3px; margin-top:2px; }
+  .ff-main { font-size:16.5px; font-weight:800; line-height:1.4; margin-top:8px; letter-spacing:-.4px; word-break:keep-all; }
+  .ff-rows { margin-top:10px; text-align:left; }
+  .ffrow { display:flex; gap:8px; padding:8px 0; border-bottom:1px dashed #efe6cd; font-size:12.5px; align-items:center; }
+  .ffrow b { color:#a89b85; flex:none; width:64px; font-size:11.5px; }
+  .ffrow span { font-weight:700; line-height:1.4; }
+  .ff-data { font-size:10.5px; color:#b3a98f; margin-top:10px; line-height:1.5; }
+  .ff-detailbtn { border:none; background:#F1E8CF; border-radius:99px; padding:9px 18px;
+    font-family:inherit; font-weight:800; font-size:12px; margin:10px auto 0; display:block;
+    cursor:pointer; color:#6b6350; }
+  .ff-btns { display:flex; gap:8px; margin-top:auto; }
+  .ff-btns button { flex:1; border:none; background:#111; color:#fff; font-family:inherit;
+    font-weight:800; font-size:13px; padding:12px; border-radius:13px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .ff-btns button:first-child { background:#F1E8CF; color:#222; }
+  .fclose { position:absolute; left:50%; transform:translateX(-50%); bottom:95px;
+    background:#fff; border:none; border-radius:99px; padding:13px 24px;
+    font-family:inherit; font-weight:800; font-size:14px; cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  .gh-vs { display:flex; align-items:center; justify-content:center; gap:18px; margin-top:16px; }
+  .gh-score { font-size:34px; font-weight:800; letter-spacing:-1px; }
+
+  /* ── side notes / jump ── */
+  .notes { width:330px; color:#cfc7b4; font-size:13.5px; line-height:1.65; padding-top:10px; }
+  .notes h3 { color:#fff; font-size:16px; margin-bottom:12px; letter-spacing:-.3px; }
+  .notes h4 { color:#FFC93F; font-size:13px; margin:18px 0 6px; }
+  .notes li { margin:0 0 8px 18px; }
+  .notes .flow { background:#221f19; border-radius:14px; padding:12px 14px; font-size:12.5px; margin-top:8px; color:#a89f8c; }
+  @media (max-width:820px){ .notes{display:none} }
+  .jump { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:99;
+    background:#221f19; border-radius:99px; padding:8px 10px; display:flex; gap:4px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5); }
+  .jump button { background:none; border:none; color:#a89f8c; font-family:inherit; font-size:12px; font-weight:700;
+    padding:7px 9px; border-radius:99px; cursor:pointer; white-space:nowrap; }
+  .jump button.on { background:#FFC93F; color:#222; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <!-- 시작 (생일 + 시각) -->
+  <section class="screen" id="scr-start">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="content" style="padding-top:48px;text-align:center">
+      <div style="display:flex;justify-content:center;margin-bottom:24px">
+        <div class="blob" id="start-blob" style="width:116px;height:116px;background:#FFC93F"></div>
+      </div>
+      <h1 class="title">생일 알려줄래?<br>내 타입을 찾아줄게</h1>
+      <p class="sub">불·물·나무·흙·쇠 — 5가지 타입 중 하나예요</p>
+      <div class="card" style="text-align:left">
+        <b style="font-size:13px;color:#a49a80">생년월일</b>
+        <input type="date" id="birthdate" value="1995-07-15"
+          style="width:100%;border:none;background:#FBF4DF;border-radius:14px;padding:14px;margin-top:8px;font-size:16px;font-family:inherit;font-weight:700">
+        <b style="font-size:13px;color:#a49a80;display:block;margin-top:14px">태어난 시각 (선택)</b>
+        <select id="birthtime" style="width:100%;border:none;background:#FBF4DF;border-radius:14px;padding:14px;margin-top:8px;font-size:15px;font-family:inherit;font-weight:700;color:#6b6350">
+          <option>몰라요 (괜찮아요!)</option><option>새벽 (23~05시)</option><option>아침 (05~11시)</option>
+          <option>낮 (11~17시)</option><option>저녁 (17~23시)</option>
+        </select>
+      </div>
+      <button class="btn" onclick="reveal()">내 타입 보기</button>
+      <p class="tiny" style="margin-top:12px">타입은 재미! 오늘의 운세는 내 진짜 기록으로 만들어져요</p>
+    </div>
+  </section>
+
+  <!-- 타입 공개 -->
+  <section class="screen" id="scr-type">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="content" style="padding-top:52px;text-align:center">
+      <div style="display:flex;justify-content:center;margin-bottom:24px">
+        <div class="blob pop" id="type-blob" style="width:160px;height:160px"></div>
+      </div>
+      <h1 class="title" id="type-title">나는 불 타입!</h1>
+      <div style="margin-top:14px" id="type-traits"></div>
+      <p class="sub" id="type-desc" style="margin-top:16px"></p>
+      <button class="btn" onclick="go('main')">내 할 일 보러 가기 →</button>
+    </div>
+  </section>
+
+  <!-- 메인 -->
+  <section class="screen" id="scr-main">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="content">
+      <div class="head">
+        <span class="tab on">할 일(<span id="todo-count">5</span>)</span>
+        <span class="tab" onclick="go('done')">완료한 일</span>
+        <div class="icons">
+          <button class="circleY" onclick="go('everyone')" title="모두의 할 일"><span class="ico" data-i="globe" data-s="19"></span></button>
+          <button class="plainI" onclick="go('widget')" title="위젯"><span class="ico" data-i="grid" data-s="20"></span></button>
+        </div>
+      </div>
+
+      <div class="hanmadi" id="hanmadi" onclick="openFortune()">
+        <div class="row1">
+          <div class="blob mini" id="hm-blob" style="background:#FFC93F"></div>
+          <div style="flex:1">
+            <b>오늘의 운세 · <span id="hm-type"></span> · <span id="hm-stars" style="color:#F5A623"></span></b>
+            <div class="msg" id="hm-msg"></div>
+          </div>
+          <span style="color:#c9bfa4;font-weight:800;font-size:18px">›</span>
+        </div>
+        <div class="foot" id="hm-foot"></div>
+      </div>
+
+      <div class="grid" id="todo-grid"></div>
+      <p class="tiny" style="text-align:center;margin-top:14px">카드 한 번 탭 = 수정 · 두 번 탭 = 완료</p>
+    </div>
+    <button class="addbtn" onclick="openAdd()"><span class="ico" data-i="plus" data-s="24"></span></button>
+    <button class="setbtn" onclick="go('settings')"><span class="ico" data-i="gear" data-s="22"></span></button>
+  </section>
+
+  <!-- ══ 할 일 추가/수정 모달 ══ -->
+  <div class="addmodal" id="addmodal">
+    <div class="amdim" onclick="closeAdd()"></div>
+    <div class="amwrap">
+      <div class="addcard" id="am-card">
+        <button class="pin" id="am-pin" onclick="togglePin()" title="상단 고정"><span class="ico" data-i="pin" data-s="18"></span></button>
+        <div class="am-head" id="am-head">딱 알맞게, 무리 없이</div>
+        <div class="am-face" id="am-face"></div>
+
+        <div class="am-slider" id="am-slider">
+          <div class="am-track"></div>
+          <div class="am-dot" style="left:0%"></div>
+          <div class="am-dot" style="left:25%"></div>
+          <div class="am-dot" style="left:50%"></div>
+          <div class="am-dot" style="left:75%"></div>
+          <div class="am-dot" style="left:100%"></div>
+          <div class="am-knob" id="am-knob" style="left:50%"></div>
+        </div>
+
+        <div class="am-tools" id="am-tools">
+          <button class="rndbtn" id="am-alarm" onclick="openAlarm()"><span class="ico" data-i="clock" data-s="18"></span><span class="abadge" id="am-abadge" style="display:none">1</span></button>
+          <button class="rndbtn" id="am-pub" onclick="toggleAddPub()" title="모두의 할 일에 보여주기"><span class="ico" data-i="globe" data-s="18"></span></button>
+          <button class="cheerchip" id="am-cheerchip" onclick="openCheerers()" style="display:none" title="응원한 사람들"></button>
+          <span class="am-count" id="am-count">0/40</span>
+        </div>
+        <div class="am-inputrow">
+          <input id="am-text" placeholder="오늘의 할 일을 적어봐!!" maxlength="40" oninput="amCount()">
+          <button class="am-check" id="am-check" onclick="addTodo()"><span class="ico" data-i="check" data-s="17"></span></button>
+        </div>
+      </div>
+      <div class="kb">
+        <div class="krow"><div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div><div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div></div>
+        <div class="krow"><div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div><div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div></div>
+        <div class="krow"><div class="key gray">⇧</div><div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div><div class="key">n</div><div class="key">m</div><div class="key gray">⌫</div></div>
+        <div class="krow"><div class="key gray">123</div><div class="key gray"><span class="ico" data-i="smile" data-s="17"></span></div><div class="key wide">space</div><div class="key gray">return</div></div>
+        <div class="kbot"><span class="ico" data-i="globe" data-s="19"></span><span class="ico" data-i="mic" data-s="19"></span></div>
+        <div class="homebar"></div>
+      </div>
+    </div>
+
+    <!-- 알림 시간 팝업 -->
+    <div class="alarmpop" id="alarmpop">
+      <h5>알림 시간</h5>
+      <div class="wheels">
+        <div class="wheel" id="wh-ampm"></div>
+        <div class="wheel" id="wh-h"></div>
+        <div class="wheel" id="wh-m"></div>
+      </div>
+      <h5 style="margin-top:12px">반복 요일 <span style="color:#c9c0a8;font-weight:600">— 고르면 매주 그 요일, 이 시간에 알림</span></h5>
+      <div class="days" id="days"></div>
+      <div class="foot2">
+        <button class="cancel" onclick="cancelAlarm()">알림 없이</button>
+        <button class="save" onclick="saveAlarm()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 완료한 일 ══ -->
+  <section class="screen" id="scr-done">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="content">
+      <div class="head">
+        <span class="tab" onclick="go('main')">할 일(<span id="todo-count2">5</span>)</span>
+        <span class="tab on">완료한 일</span>
+      </div>
+      <div class="segrow">
+        <div class="seg">
+          <button id="seg-day" class="on" onclick="setDoneView('day')">일</button>
+          <button id="seg-week" onclick="setDoneView('week')">주</button>
+          <button id="seg-month" onclick="setDoneView('month')">월</button>
+        </div>
+        <button class="trash" onclick="toast('프로토타입: 전체 삭제는 생략했어요')"><span class="ico" data-i="trash" data-s="20"></span></button>
+      </div>
+      <div id="done-body"></div>
+    </div>
+    <button class="addbtn" onclick="openAdd()"><span class="ico" data-i="plus" data-s="24"></span></button>
+    <button class="setbtn" onclick="go('settings')"><span class="ico" data-i="gear" data-s="22"></span></button>
+  </section>
+
+  <!-- ══ 설정 ══ -->
+  <section class="screen" id="scr-settings">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="set-top" id="set-top"></div>
+    <div class="set-sheet">
+      <button class="prem-pill" onclick="openSub()"><span class="crown"><span class="ico" data-i="crown" data-s="13"></span></span> 프리미엄 업그레이드</button>
+
+      <div class="srow" onclick="toast('프로토타입: 나의 정보')">나의 정보 <span class="rt"><span class="chev">›</span></span></div>
+      <div class="setdivider"></div>
+      <div class="srow" onclick="toast('프로토타입: 알림 설정')">알림 <span class="rt"><span class="chev">›</span></span></div>
+      <div class="setdivider"></div>
+      <div class="srow" onclick="toast('프로토타입: 글자스타일')">글자스타일 <span class="rt">주아체(크게) <span class="chev">›</span></span></div>
+      <div class="setdivider"></div>
+      <div class="srow" onclick="toast('프로토타입: 배경 색')">배경 <span class="rt"><span class="swatch" style="background:#FFF9E8"></span><span class="chevd">▾</span></span></div>
+      <div class="setdivider"></div>
+      <div class="srow" onclick="toast('프로토타입: 몸통 칼라')">몸통 칼라 변경 <span class="rt"><span class="swatch" style="background:conic-gradient(#FF5226,#FFC93F,#8FBE3F,#6FA8F5,#8E7CE8)"></span><span class="chevd">▾</span></span></div>
+      <div class="setdivider"></div>
+      <div class="srow" onclick="toast('프로토타입: 눈 모양')">눈 모양 변경 <span class="rt"><span class="swatch" id="eye-swatch" style="background:#FFC93F;display:flex;align-items:center;justify-content:center"></span><span class="chevd">▾</span></span></div>
+      <div class="setdivider"></div>
+      <div class="srow">완료 버튼 연타 설정 <div class="sw on" style="margin-left:auto" onclick="this.classList.toggle('on')"></div></div>
+
+      <div class="sethead4">모두의 할 일 <span style="color:#d8cfb4">— 신규</span></div>
+      <div class="srow">새 할 일 기본 공개
+        <div class="sw on" id="set-defpub" style="margin-left:auto" onclick="toggleDefPub()"></div>
+      </div>
+      <div class="setdivider"></div>
+      <div class="srow" onclick="cycleCheerNoti()">응원 알림
+        <span class="rt" id="set-cheernoti">없음 · 들어와서 확인 <span class="chev">›</span></span>
+      </div>
+      <p class="tiny" style="margin:2px 2px 0">응원은 푸시로 보내지 않는 걸 추천해요. 위젯과 앱에서 발견하는 재미로!</p>
+      <div class="setdivider" style="margin-top:14px"></div>
+      <div class="srow" onclick="go('start')">내 타입
+        <span class="rt" id="set-mytype"></span>
+      </div>
+
+      <div class="srow dim2">버전 <span class="ver">1.2.0</span></div>
+
+      <button class="idea-btn" onclick="toast('아이디어 고마워요!')"><span class="ico" data-i="plane" data-s="16"></span> IDEA 던지기</button>
+    </div>
+    <button class="set-x" onclick="go('main')"><span class="ico" data-i="x" data-s="17"></span></button>
+  </section>
+
+  <!-- 구독 시트 -->
+  <div class="sheet" id="subsheet" style="z-index:33">
+    <div class="handle"></div>
+    <h1 class="title" style="font-size:21px;display:flex;align-items:center;gap:8px">프리미엄 <span style="color:#F5A623" class="ico" data-i="crown" data-s="20"></span></h1>
+    <p class="sub" style="margin-top:4px">꾸미기 전체 + 위젯 전부 + 무제한 기록<br><b style="color:#222">모두의 할 일 · 응원은 계속 무료예요!</b></p>
+    <div class="plan" data-p="m" onclick="selPlan('m',this)">
+      <div><div class="pname">월간</div><div class="pdesc">부담 없이 시작</div></div>
+      <div class="price">₩4,400<div class="per">/월</div></div>
+    </div>
+    <div class="plan sel" data-p="y" onclick="selPlan('y',this)">
+      <span class="best">제일 인기</span>
+      <div><div class="pname">연간</div><div class="pdesc">월 ₩2,417 꼴 · 45% 절약</div></div>
+      <div class="price">₩29,000<div class="per">/년</div></div>
+    </div>
+    <div class="plan" data-p="l" onclick="selPlan('l',this)">
+      <div><div class="pname">무제한</div><div class="pdesc">한 번만 결제하면 평생</div></div>
+      <div class="price">₩44,000<div class="per">단 한 번</div></div>
+    </div>
+    <button class="btn" style="background:#111;color:#fff" onclick="toast('프로토타입: 결제 시트가 열릴 자리예요')">시작하기</button>
+  </div>
+
+  <!-- ══ 위젯 미리보기 ══ -->
+  <section class="screen" id="scr-widget">
+    <div class="statusbar"><span>12:03</span><span></span><span style="display:flex;align-items:center;gap:4px"><span class="ico" data-i="battery" data-s="22"></span>19</span></div>
+    <div class="content">
+      <div class="wg-caption">현재 위젯 — 할 일 리스트 (디자인 원본)</div>
+      <div class="widget-md wg-plus" id="wg-current"></div>
+
+      <div class="wg-caption">제안 A — 아래에 응원 스트립 한 줄 추가</div>
+      <div class="widget-md wg-plus" id="wg-propA"></div>
+
+      <div class="wg-caption">제안 B — 스몰 위젯: 조용한 알림 역할</div>
+      <div class="wg-small-wrap">
+        <div class="widget-sm">
+          <div class="blob" id="wg-sm-blob" style="background:#8E7CE8"></div>
+          <div class="t1">오늘 4단계</div>
+          <div class="cb" id="wg-sm-cheer"></div>
+        </div>
+        <div class="widget-sm" style="background:#111">
+          <div class="blob" id="wg-sm-blob2" style="background:#FFC93F"></div>
+          <div class="t1" style="color:#FFF3D6">오늘의 운세</div>
+          <div class="t2" style="color:#8e929f;text-align:center;padding:0 10px">오늘은 3개만<br>끝내도 충분해요</div>
+        </div>
+      </div>
+      <p class="tiny" style="color:#8e929f;margin-top:14px;line-height:1.6">
+        위젯이 곧 "조용한 알림"이에요 — 푸시 없이도 홈 화면에서<br>응원 개수가 보이니까, 궁금해서 앱을 열게 됩니다.<br>내용은 안 보여주는 게 포인트 (열어야 보이는 선물상자)</p>
+    </div>
+    <button class="set-x" onclick="go('main')"><span class="ico" data-i="x" data-s="17"></span></button>
+  </section>
+
+  <!-- 모두의 할 일 -->
+  <section class="screen" id="scr-everyone">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="content">
+      <div class="head">
+        <span class="tab on" style="color:#222;display:flex;align-items:center;gap:7px">모두의 할 일 <span class="ico" data-i="globe" data-s="20"></span></span>
+        <div class="icons"><button class="plainI" onclick="go('main')"><span class="ico" data-i="x" data-s="18"></span></button></div>
+      </div>
+      <p class="sub" style="margin-top:2px">지금 전 세계 사람들이 올려둔 할 일 · 이름은 서로 몰라요</p>
+      <div class="filters">
+        <button class="on" onclick="setFilter('all',this)">전체</button>
+        <button onclick="setFilter('same',this)">나랑 같은 단계</button>
+        <button onclick="setFilter('fav',this)">찜한 사람 <span class="ico" data-i="starf" data-s="12"></span></button>
+      </div>
+      <div id="people-list"></div>
+    </div>
+  </section>
+
+  <!-- ══ 사용자 페이지 (그 사람의 와투 홈) ══ -->
+  <section class="screen" id="scr-user">
+    <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
+    <div class="content" id="user-body"></div>
+  </section>
+
+  <!-- dim (구독/궁합 시트 공용) -->
+  <div class="dim" id="dim" onclick="closeSheet()"></div>
+
+  <!-- ══ 오늘의 운세 상세 모달 ══ -->
+  <div class="fmodal" id="fmodal">
+    <div class="fdim" onclick="closeFortune()"></div>
+    <div class="fcard" id="fcard">
+      <div class="ffront">
+        <div class="ff-date">7월 26일 일요일</div>
+        <div class="ftabs" id="ftabs">
+          <button class="on" data-p="today" onclick="setFPeriod('today')">오늘</button>
+          <button data-p="week" onclick="setFPeriod('week')">이번 주</button>
+          <button data-p="month" onclick="setFPeriod('month')">이번 달</button>
+          <button data-p="year" onclick="setFPeriod('year')">올해 <span class="ico" data-i="crown" data-s="11"></span></button>
+        </div>
+        <div class="ff-scroll">
+          <div class="ff-type" id="ff-type" style="margin-top:8px"></div>
+          <div class="blob" id="ff-blob" style="width:56px;height:56px;margin:6px auto 0;background:#FF5226"></div>
+          <div class="ff-stars" id="ff-stars"></div>
+          <div class="ff-main" id="ff-main"></div>
+          <div class="ff-rows" id="ff-body"></div>
+          <button class="ff-detailbtn" id="ff-detailbtn" onclick="toggleFDetail()">상세보기 ▾</button>
+          <div class="ff-data" id="ff-data"></div>
+        </div>
+        <div class="ff-btns">
+          <button onclick="openGunghap()"><span class="ico" data-i="users" data-s="15"></span> 친구 궁합</button>
+          <button onclick="toast('운세 카드가 이미지로 공유돼요 (프로토타입)')">공유</button>
+        </div>
+      </div>
+    </div>
+    <button class="fclose" onclick="closeFortune()">오늘 하루 화이팅! 닫기</button>
+  </div>
+
+  <!-- 친구 궁합 시트 -->
+  <div class="sheet" id="ghsheet" style="z-index:46">
+    <div class="handle"></div>
+    <h1 class="title" style="font-size:20px;display:flex;align-items:center;gap:8px">친구 궁합 보기 <span class="ico" data-i="users" data-s="19"></span></h1>
+    <p class="sub" style="margin-top:4px">친구는 앱이 없어도 돼요 — 생일만 알면 끝!</p>
+    <input type="date" id="gh-date" value="1996-03-02"
+      style="width:100%;border:none;background:#FBF4DF;border-radius:14px;padding:14px;margin-top:12px;font-size:16px;font-family:inherit;font-weight:700">
+    <button class="btn" onclick="calcGunghap()">궁합 보기</button>
+    <div id="gh-result"></div>
+  </div>
+
+  <!-- 응원한 사람들 / 프로필 -->
+  <div class="dim" id="dim2" style="z-index:47" onclick="closeCheerSheets()"></div>
+  <div class="sheet" id="chsheet" style="z-index:48">
+    <div class="handle"></div>
+    <h1 class="title" style="font-size:19px">이 할 일을 응원한 사람들</h1>
+    <p class="sub" style="margin-top:3px">사람을 누르면 그 사람의 공개 할 일을 볼 수 있어요</p>
+    <div id="ch-list"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- 팀 리뷰 노트 -->
+<aside class="notes">
+  <h3>watoo v7 — 디자인 충실 + 인터랙션 확정</h3>
+  <div class="flow">
+    <b style="color:#cfc7b4">이번 버전 반영</b><br>
+    · 카드 <b style="color:#fff">돔형 + 상단 탭</b> (피그마 원본)<br>
+    · 헤더: 노란 원(모두의 할 일) + 4점 그리드<br>
+    · <b style="color:#fff">한 번 탭 = 수정 모달 · 두 번 탭 = 완료</b><br>
+    · 운세 가림 = <b style="color:#fff">****</b> (검열 느낌)<br>
+    · 이모지 전부 SVG 아이콘으로 교체
+  </div>
+  <h4>운세 루프</h4>
+  <ul>
+    <li>첫 진입: "운세 도착" 카드 → 생일+시각 설정</li>
+    <li>이후 매일: 일부 **** 가림 → 탭하면 상세(오늘/주/월/연) → 그날은 전체 공개</li>
+    <li>다음날: 다시 가림 (점프 메뉴 "다음날"로 데모)</li>
+  </ul>
+  <h4>논의 포인트</h4>
+  <ul>
+    <li>더블탭 완료 — 실수 방지 장치(되돌리기 토스트) 필요?</li>
+    <li>**** 가림 수위 — 답답함 vs 궁금증</li>
+    <li>올해 운세 = 프리미엄 후보</li>
+    <li>소셜 무료 유지 / 위젯 A vs B</li>
+  </ul>
+</aside>
+
+<div class="jump" id="jump">
+  <button data-k="start" onclick="go('start')">시작</button>
+  <button data-k="main" class="on" onclick="go('main')">할 일</button>
+  <button data-k="fortune" onclick="go('main');openFortune()">운세</button>
+  <button data-k="add" onclick="go('main');openAdd()">추가</button>
+  <button data-k="everyone" onclick="go('everyone')">모두</button>
+  <button data-k="done" onclick="go('done')">완료</button>
+  <button data-k="week" onclick="go('done');setDoneView('week')">주</button>
+  <button data-k="settings" onclick="go('settings')">설정</button>
+  <button data-k="widget" onclick="go('widget')">위젯</button>
+  <button data-k="nextday" onclick="nextDay()" style="color:#F5A623">다음날</button>
+</div>
+
+<script>
+/* ══ SVG 아이콘 시스템 (이모지 대체) ══ */
+const ICON_PATHS={
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.5 3.2 14 0 18M12 3c-3.2 3.5-3.2 14 0 18"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  pin:'<path d="M9 3.5h6M12 3.5V7M8 7h8l1.2 5.5H6.8L8 7z"/><path d="M12 12.5V20"/>',
+  sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/>',
+  star:'<path d="M12 3l2.7 5.8 6.3.7-4.7 4.3 1.3 6.2-5.6-3.2-5.6 3.2 1.3-6.2L3 9.5l6.3-.7L12 3z"/>',
+  trash:'<path d="M4 7h16M9.5 7V4.5h5V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+  down:'<path d="M12 3v11M7 9l5 5 5-5"/><path d="M4.5 21h15"/>',
+  crown:'<path d="M3 8.5l4.5 3.7L12 5.5l4.5 6.7L21 8.5l-1.8 10H4.8L3 8.5z"/>',
+  thumb:'<path d="M7 11v9H4v-9h3zM7 11l4-7c1.5 0 2.5 1 2.5 2.5L13 10h6c1 0 1.8 1 1.5 2l-1.7 6c-.3 1.2-1.1 2-2.3 2H7"/>',
+  heart:'<path d="M12 20s-7-4.5-9-9c-1.3-3 1-7 4.5-7C10 4 12 6.5 12 6.5S14 4 16.5 4C20 4 22.3 8 21 11c-2 4.5-9 9-9 9z"/>',
+  mega:'<path d="M3 10.5v3.5l4 .8V9.5l-4 1z"/><path d="M7 9.5L20 4.5v15L7 14.8"/><path d="M9 15.5l1 4.5h3l-1-4"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.6c2.8.3 4.5 1.9 4.5 4.4"/>',
+  plane:'<path d="M21 3L3 11l7 2 2 7 9-17z"/><path d="M10 13l11-10"/>',
+  crystal:'<circle cx="12" cy="10" r="6.5"/><path d="M8.5 19.5h7M10 21.5h4"/>',
+  flame:'<path d="M12 3c1 3.5-3.5 5-3.5 8.5a3.5 3.5 0 007 0c0-1.2-.5-2.2-1.2-3.1 2 .8 3.7 2.6 3.7 5.1a6 6 0 01-12 0C6 8.5 10.5 7 12 3z"/>',
+  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>',
+  leaf:'<path d="M5 19C5 9 13 4 20 4c0 8-4 15-13 15h-2z"/><path d="M5 19c3-5 7-8 11-10"/>',
+  mountain:'<path d="M3 19L10 6l4 7 2.2-3.2L21 19H3z"/>',
+  link:'<path d="M9 15l6-6M8.5 12L6 14.5a3.5 3.5 0 105 5l2.5-2.5M15.5 12L18 9.5a3.5 3.5 0 10-5-5L10.5 7"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  check:'<path d="M4.5 12.5l5 5L19.5 6.5"/>',
+  restore:'<path d="M3.5 4v6h6"/><path d="M4 13a8.2 8.2 0 102-7L3.5 10"/>',
+  smile:'<circle cx="12" cy="12" r="9"/><path d="M8.5 14c1 1.5 2.2 2.2 3.5 2.2s2.5-.7 3.5-2.2"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0012 0M12 17.5V21M8.5 21h7"/>',
+  battery:'<rect x="2" y="8" width="17" height="9" rx="2.5"/><path d="M21.5 10.5v4"/><rect x="4" y="10" width="11" height="5" rx="1" fill="currentColor" stroke="none"/>',
+  moon:'<path d="M20 14.5A8.5 8.5 0 119.5 4 7 7 0 0020 14.5z"/>',
+};
+function ic(name,s=16){
+  if(name==='grid') return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor"><circle cx="7.5" cy="7.5" r="2.6"/><circle cx="16.5" cy="7.5" r="2.6"/><circle cx="7.5" cy="16.5" r="2.6"/><circle cx="16.5" cy="16.5" r="2.6"/></svg>`;
+  if(name==='starf') return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor"><path d="M12 3l2.7 5.8 6.3.7-4.7 4.3 1.3 6.2-5.6-3.2-5.6 3.2 1.3-6.2L3 9.5l6.3-.7L12 3z"/></svg>`;
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;
+}
+
+/* ── 데이터 ── */
+const LEVELS = [null,
+  { label:'1단계 · 가장 여유',   color:'#FFC93F', quote:'세상 평온, 여유 가득' },
+  { label:'2단계 · 적당히 여유', color:'#8FBE3F', quote:'천천히 해도 충분해' },
+  { label:'3단계 · 적당한 수준', color:'#6FA8F5', quote:'딱 알맞게, 무리 없이' },
+  { label:'4단계 · 조금 바쁨',   color:'#8E7CE8', quote:'조금 바빠, 하지만 가능' },
+  { label:'5단계 · 겁나 바쁨',   color:'#FF5226', quote:'완전 급해, 바로 해야 해!' },
+];
+const TYPES = {
+  wood : { ko:'나무', icon:'leaf',     color:'#6FA83F', traits:['꾸준함','매일 조금씩','한 번 자라면 튼튼'], desc:'천천히 가도 끝까지 가는 스타일!' },
+  fire : { ko:'불',   icon:'flame',    color:'#FF5226', traits:['시작이 빠름','열정 만렙','금방 지침 주의'], desc:'확 불붙는 스타일! 대신 쉬는 것도 일이에요.' },
+  earth: { ko:'흙',   icon:'mountain', color:'#D9A13B', traits:['든든함','흔들리지 않음','가끔 너무 무거움'], desc:'다들 기대는 든든한 스타일! 오늘은 나부터 챙겨요.' },
+  metal: { ko:'쇠',   icon:'link',     color:'#8F97A6', traits:['딱 잘라 결정','정리의 달인','너무 날카로울 때도'], desc:'끊을 건 끊는 스타일!' },
+  water: { ko:'물',   icon:'drop',     color:'#4A7BD0', traits:['유연함','어디든 스며듦','고이면 답답'], desc:'막히면 돌아가는 스타일!' },
+};
+const TKEYS = ['wood','fire','earth','metal','water'];
+function tico(key,s=14){ return `<span style="color:${TYPES[key].color}">${ic(TYPES[key].icon,s)}</span>`; }
+
+const REACTS=[ {k:'like',icn:'thumb',ko:'좋아요'}, {k:'cheer',icn:'mega',ko:'응원'}, {k:'heart',icn:'heart',ko:'공감'} ];
+
+let MY_TODOS = [
+  { id:1, text:'발표 자료 마무리',   lv:5, pub:true,  pinned:true,  alarm:null, cheers:{like:1,cheer:2,heart:0},
+    cheerers:[ {pid:1,k:'cheer'}, {pid:3,k:'cheer'}, {pid:5,k:'like'} ] },
+  { id:2, text:'헬스장 가기',        lv:2, pub:true,  pinned:false, alarm:{t:'오후 7:00',days:['월','수','금']}, cheers:{like:1,cheer:0,heart:0},
+    cheerers:[ {pid:4,k:'like'} ] },
+  { id:3, text:'엄마한테 전화하기',  lv:1, pub:false, pinned:false, alarm:null, cheers:{like:0,cheer:0,heart:0}, cheerers:[] },
+  { id:4, text:'밀린 이메일 답장',   lv:3, pub:true,  pinned:false, alarm:null, cheers:{like:0,cheer:0,heart:0}, cheerers:[] },
+  { id:5, text:'장보기 (우유·계란)', lv:2, pub:false, pinned:false, alarm:null, cheers:{like:0,cheer:0,heart:0}, cheerers:[] },
+];
+let nextId = 8;
+
+let DONE_LOG = [
+  { date:'2026.07.26', items:[ {text:'아침 스트레칭',lv:1}, {text:'회의록 정리',lv:3} ] },
+  { date:'2026.07.25', items:[ {text:'주간 회고 쓰기',lv:2}, {text:'디자인 시안 전달하기',lv:4}, {text:'설거지',lv:1} ] },
+];
+const WEEKS = [
+  { label:'이번 주',      tint:'#FBEFC9', balls:[1,1,2,3,1,5,4,1,2,1,3,1] },
+  { label:'7월 3째 주',   tint:'#FFE0D2', balls:[5,5,4,5,1,2,5,4,5,2,5] },
+  { label:'7월 2째 주',   tint:'#E6E0F8', balls:[4,4,1,4,2,5,4,4,1,4] },
+];
+const MONTHS = [
+  { label:'7월', tint:'#FBEFC9', balls:[1,1,2,3,1,5,4,1,2,1,3,1,5,4,2,4,1] },
+  { label:'6월', tint:'#DFF0CF', balls:[2,2,3,1,2,4,2,1,2,3,2,2] },
+];
+
+const PEOPLE = [
+  { id:1, city:'도쿄',     el:'fire',  lv:5, text:'プレゼン資料づくり',          ko:'발표 자료 만들기', cheers:{like:12,cheer:8,heart:3},  fav:true,  showKo:false, sent:{},
+    theme:{ bg:'#FFF0F3', eyes:'round', palette:['#FFD98E','#A8D8B9','#9EC9F5','#C5B3F0','#FF8E72'] },
+    pubTodos:[ {text:'プレゼン資料づくり',ko:'발표 자료 만들기',lv:5,cheers:{like:4,cheer:8,heart:1},sent:{}},
+               {text:'ジムに行く',ko:'헬스장 가기',lv:2,cheers:{like:2,cheer:0,heart:1},sent:{}},
+               {text:'部屋の掃除',ko:'방 청소',lv:1,cheers:{like:0,cheer:1,heart:0},sent:{}} ] },
+  { id:2, city:'방콕',     el:'water', lv:2, text:'แพ็คกระเป๋าไปเที่ยว',          ko:'여행 짐 싸기',     cheers:{like:5,cheer:1,heart:9},   fav:false, showKo:false, sent:{},
+    theme:{ bg:'#EFF7F0', eyes:'closed', palette:['#CBE8C4','#93D1AE','#63B8A8','#4A94B8','#FF9E80'], font:'Georgia, "Times New Roman", serif' },
+    pubTodos:[ {text:'แพ็คกระเป๋าไปเที่ยว',ko:'여행 짐 싸기',lv:2,cheers:{like:3,cheer:1,heart:5},sent:{}},
+               {text:'จองโรงแรม',ko:'호텔 예약',lv:3,cheers:{like:1,cheer:0,heart:2},sent:{}} ] },
+  { id:3, city:'베를린',   el:'metal', lv:4, text:'Finish thesis chapter 3',     ko:'논문 3장 끝내기',  cheers:{like:7,cheer:15,heart:2},  fav:false, showKo:false, sent:{},
+    theme:{ bg:'#F2F2F0', eyes:'dot', palette:['#DCDCD6','#C2C2BC','#A3A39C','#75756E','#FF4530'], font:'"Courier New", monospace' },
+    pubTodos:[ {text:'Finish thesis chapter 3',ko:'논문 3장 끝내기',lv:4,cheers:{like:5,cheer:12,heart:1},sent:{}},
+               {text:'Email advisor',ko:'지도교수 메일',lv:5,cheers:{like:2,cheer:3,heart:0},sent:{}},
+               {text:'Groceries',ko:'장보기',lv:1,cheers:{like:0,cheer:0,heart:1},sent:{}} ] },
+  { id:4, city:'뉴욕',     el:'wood',  lv:3, text:'Morning run 5km',             ko:'아침 5km 달리기',  cheers:{like:20,cheer:3,heart:5},  fav:false, showKo:false, sent:{},
+    pubTodos:[ {text:'Morning run 5km',ko:'아침 5km 달리기',lv:3,cheers:{like:15,cheer:2,heart:3},sent:{}},
+               {text:'Meal prep',ko:'식단 준비',lv:2,cheers:{like:5,cheer:1,heart:2},sent:{}} ] },
+  { id:5, city:'서울',     el:'earth', lv:4, text:'이직 면접 준비',              ko:null,               cheers:{like:9,cheer:22,heart:6},  fav:false, showKo:false, sent:{},
+    theme:{ bg:'#FFF6EC', eyes:'lash', palette:['#FFC93F','#8FBE3F','#6FA8F5','#8E7CE8','#FF5226'] },
+    pubTodos:[ {text:'이직 면접 준비',ko:null,lv:4,cheers:{like:6,cheer:18,heart:4},sent:{}},
+               {text:'포트폴리오 업데이트',ko:null,lv:5,cheers:{like:3,cheer:4,heart:2},sent:{}},
+               {text:'저녁 러닝',ko:null,lv:1,cheers:{like:1,cheer:0,heart:0},sent:{}} ] },
+  { id:6, city:'상파울루', el:'fire',  lv:5, text:'Prova de matemática amanhã!', ko:'내일 수학 시험!',  cheers:{like:4,cheer:18,heart:7},  fav:false, showKo:false, sent:{},
+    pubTodos:[ {text:'Prova de matemática amanhã!',ko:'내일 수학 시험!',lv:5,cheers:{like:4,cheer:16,heart:5},sent:{}} ] },
+];
+
+const state = { myType:'fire', myLevel:4, filter:'all', editId:null,
+  addLv:3, addPub:true, addAlarm:null, addPinned:false, doneView:'day', defPub:true, cheerNoti:0,
+  stars:4, luckyLv:2, luckyTime:'오후 2~4시',
+  birthSet:false, fRevealed:false };
+
+/* ── watoo 얼굴 ── */
+function face(lv,style='dot'){
+  const s='stroke="#1d1d1d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  let eyes;
+  if(style==='round') eyes=`<circle cx="19" cy="9" r="5.2" ${s}/><circle cx="39" cy="7.5" r="5.2" ${s}/><circle cx="20" cy="10" r="1.8" fill="#1d1d1d"/><circle cx="40" cy="8.5" r="1.8" fill="#1d1d1d"/>`;
+  else if(style==='closed') eyes=`<path d="M14 10 Q19 5 24 10" ${s}/><path d="M34 8.5 Q39 3.5 44 8.5" ${s}/>`;
+  else if(style==='lash') eyes=`<circle cx="19" cy="9" r="2.8" fill="#1d1d1d"/><circle cx="39" cy="6.5" r="2.8" fill="#1d1d1d"/><path d="M13.5 4.5l3 2.2M24.5 4.5l-3 2.2M33.5 2l3 2.2M44.5 2l-3 2.2" ${s}/>`;
+  else eyes='<circle cx="19" cy="9" r="2.8" fill="#1d1d1d"/><circle cx="39" cy="6.5" r="2.8" fill="#1d1d1d"/>';
+  const curl=`<path d="M31 11 q4.5 1.5 2 5 q-2 2.5 -5.5 1.5" ${s}/>`;
+  let extra='', mouth='';
+  if(lv<=1){ mouth=`<path d="M20 23 q9 7 18 0" ${s}/>`; }
+  else if(lv===2){ mouth=`<path d="M22 22 q7.5 5 15 0" ${s}/>`; }
+  else if(lv===3){ mouth=`<path d="M23 22 h13" ${s}/>`; }
+  else if(lv===4){ mouth=`<path d="M23 24 q7.5 -5 15 0" ${s}/>`;
+    extra=`<path d="M12 4 l8.5 3" ${s}/><path d="M46 1.5 l-8.5 4" ${s}/>`; }
+  else { mouth=`<path d="M21 23 l4.5 -4 l5 4 l5 -4 l4.5 4" ${s}/>`;
+    extra=`<path d="M11 3 l9 4" ${s}/><path d="M47 0 l-9 5" ${s}/>
+      <circle cx="9" cy="19" r="3.4" fill="rgba(255,110,80,.55)"/><circle cx="51" cy="16" r="3.4" fill="rgba(255,110,80,.55)"/>`; }
+  return `<svg viewBox="0 0 60 30">${eyes}${curl}${extra}${mouth}</svg>`;
+}
+
+/* ── 화면 이동 ── */
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('scr-'+name).classList.add('on');
+  closeSheet(); closeAdd(); closeSub(); closeGunghap(); closeCheerSheets(); stopPhys();
+  document.getElementById('fmodal').classList.remove('on');
+  document.querySelectorAll('#jump button').forEach(b=>b.classList.toggle('on',b.dataset.k===name));
+  if(name==='main') renderMain();
+  if(name==='everyone') renderPeople();
+  if(name==='done'){ state.doneView='day'; syncSeg(); renderDone(); }
+  if(name==='settings') renderSettings();
+  if(name==='widget') renderWidget();
+  if(name==='user') renderUserPage();
+}
+
+/* ── 시작 → 타입 ── */
+function reveal(){
+  const v=document.getElementById('birthdate').value || '1995-07-15';
+  const [y,m,d]=v.split('-').map(Number);
+  const t=TKEYS[(y+m+d)%5];
+  state.myType=t;
+  const T=TYPES[t];
+  const tb=document.getElementById('type-blob');
+  tb.style.background=T.color;
+  tb.innerHTML=face(1)+`<span class="badge" style="color:${T.color}">${ic(T.icon,16)}</span>`;
+  tb.classList.remove('pop'); void tb.offsetWidth; tb.classList.add('pop');
+  document.getElementById('type-title').innerHTML=`나는 ${tico(t,22)} ${T.ko} 타입!`;
+  document.getElementById('type-traits').innerHTML=T.traits.map(x=>`<span class="chip">${x}</span>`).join('');
+  document.getElementById('type-desc').textContent=T.desc;
+  document.getElementById('set-mytype').innerHTML=`${tico(t,14)} ${T.ko} 타입 <span class="chev">›</span>`;
+  state.birthSet=true; state.fRevealed=false;
+  computeFortune();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('scr-type').classList.add('on');
+  document.querySelectorAll('#jump button').forEach(b=>b.classList.remove('on'));
+}
+
+/* ── 메인 ── */
+function cheerTotal(t){ return t.cheers.like+t.cheers.cheer+t.cheers.heart; }
+function allCheers(){ return MY_TODOS.reduce((a,t)=>a+cheerTotal(t),0); }
+function renderMain(){
+  document.getElementById('todo-count').textContent=MY_TODOS.length;
+  const c2=document.getElementById('todo-count2'); if(c2) c2.textContent=MY_TODOS.length;
+  renderHanmadi();
+  const sorted=[...MY_TODOS].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
+  document.getElementById('todo-grid').innerHTML=sorted.map(t=>{
+    const n=cheerTotal(t);
+    return `<div class="tcard" style="background:${LEVELS[t.lv].color}" onclick="cardTap(${t.id})">
+      <div class="marks">
+        <span style="display:flex;gap:4px">
+          ${t.pinned?`<span class="pubmark">${ic('pin',12)}</span>`:''}
+          ${t.pub?`<span class="pubmark">${ic('globe',12)}</span>`:''}
+          ${t.alarm?`<span class="pubmark">${ic('clock',12)}</span>`:''}
+          ${t.lv===state.luckyLv&&state.fRevealed?`<span class="pubmark">${ic('sparkle',12)}</span>`:''}
+        </span>
+        <span>${n?`<span class="cheermark">${ic('mega',12)} ${n}</span>`:''}</span>
+      </div>
+      ${face(t.lv)}
+      <div class="ttext">${t.text}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── 탭 판별: 한 번=수정, 두 번=완료 ── */
+let tapT=null, tapId=null;
+function cardTap(id){
+  if(tapId===id && tapT){ clearTimeout(tapT); tapT=null; tapId=null; completeById(id); return; }
+  if(tapT) clearTimeout(tapT);
+  tapId=id;
+  tapT=setTimeout(()=>{ tapT=null; tapId=null; openEdit(id); },270);
+}
+function completeById(id){
+  const i=MY_TODOS.findIndex(x=>x.id===id); if(i<0) return;
+  const t=MY_TODOS.splice(i,1)[0];
+  if(DONE_LOG[0].date!=='2026.07.26') DONE_LOG.unshift({date:'2026.07.26',items:[]});
+  DONE_LOG[0].items.unshift({text:t.text,lv:t.lv});
+  renderMain();
+  toast('완료! 완료한 일에 담겼어요');
+}
+
+/* ── 할 일 수정 = 추가 모달 재사용 ── */
+function openEdit(id){
+  const t=MY_TODOS.find(x=>x.id===id); if(!t) return;
+  state.editId=id; state.addLv=t.lv; state.addPub=t.pub; state.addAlarm=t.alarm; state.addPinned=!!t.pinned;
+  document.getElementById('am-text').value=t.text;
+  amCount(); paintAdd(t.lv); syncAlarmBadge(); syncPin();
+  document.getElementById('am-pub').classList.toggle('off',!t.pub);
+  syncCheerChip(t);
+  document.getElementById('addmodal').classList.add('on');
+  document.querySelectorAll('#jump button').forEach(b=>b.classList.remove('on'));
+}
+/* 상단 고정 (핀) */
+function togglePin(){
+  state.addPinned=!state.addPinned;
+  syncPin();
+  toast(state.addPinned?'이 할 일이 목록 맨 위에 고정돼요':'고정을 해제했어요');
+}
+function syncPin(){
+  document.getElementById('am-pin').classList.toggle('on',state.addPinned);
+}
+/* 응원 칩 (지구 버튼 오른쪽) */
+function syncCheerChip(t){
+  const chip=document.getElementById('am-cheerchip');
+  const n=t?cheerTotal(t):0;
+  if(!t || !n){ chip.style.display='none'; return; }
+  chip.style.display='inline-flex';
+  chip.innerHTML=`${ic('mega',13)} ${n}`;
+}
+function openCheerers(){
+  const t=MY_TODOS.find(x=>x.id===state.editId);
+  if(!t || !t.cheerers.length) return;
+  document.getElementById('ch-list').innerHTML=t.cheerers.map(c=>{
+    const p=PEOPLE.find(x=>x.id===c.pid); if(!p) return '';
+    const T=TYPES[p.el], r=REACTS.find(x=>x.k===c.k);
+    return `<div class="chrow" onclick="openProfile(${p.id})">
+      <div class="blob" style="background:${LEVELS[p.lv].color}">${face(p.lv)}</div>
+      <div>
+        <div class="who">${p.city}의 ${T.ko} 타입</div>
+        <div class="sub2">${tico(p.el,11)} ${LEVELS[p.lv].label}</div>
+      </div>
+      <span class="rx">${ic(r.icn,17)}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('dim2').classList.add('on');
+  document.getElementById('chsheet').classList.add('on');
+}
+function openProfile(pid){
+  state.viewUser=pid;
+  const cur=document.querySelector('.screen.on');
+  let back=cur?cur.id.replace('scr-',''):'everyone';
+  if(back==='user') back=state.userBack||'everyone';
+  state.userBack=back;
+  closeCheerSheets();
+  go('user');
+}
+function closeCheerSheets(){
+  document.getElementById('dim2').classList.remove('on');
+  document.getElementById('chsheet').classList.remove('on');
+}
+/* 사용자 페이지: 그 사람이 꾸민 와투 홈 그대로 */
+function renderUserPage(){
+  const p=PEOPLE.find(x=>x.id===state.viewUser); if(!p) return;
+  const T=TYPES[p.el], th=p.theme||{};
+  const pal=th.palette||LEVELS.slice(1).map(l=>l.color);
+  const eyes=th.eyes||'dot';
+  document.getElementById('scr-user').style.background=th.bg||'#FFF9E8';
+  document.getElementById('user-body').innerHTML=`
+    <div class="head">
+      <button class="plainI" onclick="go(state.userBack||'everyone')">${ic('back',22)}</button>
+      <span class="tab on" style="color:#222;font-size:20px">${p.city}의 ${T.ko} 타입</span>
+      <div class="icons">
+        <button class="plainI" style="color:${p.fav?'#F5A623':'#c9bfa4'}" onclick="toggleFav(${p.id});renderUserPage()">${ic(p.fav?'starf':'star',22)}</button>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:0">${tico(p.el,12)} 오늘 ${LEVELS[p.lv].label} · 이 친구가 직접 꾸민 와투예요</p>
+    <div class="grid">
+      ${p.pubTodos.map((t,i)=>`
+        <div class="tcard" style="background:${pal[t.lv-1]};cursor:default">
+          ${face(t.lv,eyes)}
+          <div class="ttext" ${th.font?`style="font-family:${th.font}"`:''}>${t.text}${t.ko?`<br><span style="opacity:.5;font-size:10.5px">${t.ko}</span>`:''}</div>
+          <div class="rrow">${REACTS.map(r=>`<button class="${t.sent[r.k]?'sent':''}" onclick="reactUser(${p.id},${i},'${r.k}')">${ic(r.icn,12)} ${t.cheers[r.k]}</button>`).join('')}</div>
+        </div>`).join('')}
+    </div>
+    <p class="tiny" style="text-align:center;margin-top:14px">공개한 할 일만 보여요 · 얼굴·몸통·배경·글씨는 이 친구가 고른 거예요</p>`;
+}
+function reactUser(pid,idx,k){
+  const p=PEOPLE.find(x=>x.id===pid); const t=p.pubTodos[idx];
+  if(t.sent[k]){ t.sent[k]=false; t.cheers[k]--; }
+  else { t.sent[k]=true; t.cheers[k]++;
+    toast(REACTS.find(r=>r.k===k).ko+'를 보냈어요 · 알림은 안 가요, 이 친구가 열면 보여요'); }
+  renderUserPage();
+}
+function closeSheet(){ document.getElementById('dim').classList.remove('on'); }
+
+/* ── 운세 요약 카드 (**** 가림) ── */
+function maskWords(s){
+  return s.split(' ').map((w,i)=> (i%2===1 && w.length>1) ? '*'.repeat(Math.min(8,Math.max(4,w.length*2))) : w).join(' ');
+}
+function renderHanmadi(){
+  const hb=document.getElementById('hm-blob');
+  hb.innerHTML=face(state.myLevel); hb.style.background=LEVELS[state.myLevel].color;
+  const typeEl=document.getElementById('hm-type');
+  const starsEl=document.getElementById('hm-stars');
+  const msg=document.getElementById('hm-msg');
+  const foot=document.getElementById('hm-foot');
+  const cheerLine=`${ic('mega',12)} 응원 <b style="display:inline;color:#222">${allCheers()}</b>개 도착`;
+  if(!state.birthSet){
+    typeEl.innerHTML=ic('crystal',13); starsEl.textContent='';
+    msg.textContent='오늘의 운세가 도착했어요 — 생일 알려주고 열어보기!';
+    foot.innerHTML=`${cheerLine} · 탭 한 번이면 끝나요`;
+    return;
+  }
+  const T=TYPES[state.myType];
+  typeEl.innerHTML=`${tico(state.myType,12)} ${T.ko} 타입`;
+  starsEl.textContent='★'.repeat(state.stars)+'☆'.repeat(5-state.stars);
+  const full=F_MAIN[state.myType];
+  if(state.fRevealed){
+    msg.textContent=full;
+    foot.innerHTML=`${cheerLine} · ${ic('sparkle',12)} 오늘은 ${state.luckyLv}단계 색 할 일부터!`;
+  } else {
+    msg.textContent=maskWords(full);
+    foot.innerHTML=`${cheerLine} · ${ic('sparkle',12)} 행운의 색은 ****? 탭해서 열어보기`;
+  }
+}
+function nextDay(){
+  state.fRevealed=false;
+  toast('다음날 아침 — 운세가 다시 가려졌어요');
+  go('main');
+}
+
+/* ══ 할 일 추가 모달 ══ */
+function openAdd(){
+  state.editId=null;
+  state.addLv=3; state.addPub=state.defPub; state.addAlarm=null; state.addPinned=false;
+  document.getElementById('am-text').value='';
+  amCount(); paintAdd(3); syncAlarmBadge(); syncPin(); syncCheerChip(null);
+  document.getElementById('am-pub').classList.toggle('off',!state.addPub);
+  document.getElementById('addmodal').classList.add('on');
+  document.querySelectorAll('#jump button').forEach(b=>b.classList.toggle('on',b.dataset.k==='add'));
+}
+function closeAdd(){
+  document.getElementById('addmodal').classList.remove('on');
+  document.getElementById('alarmpop').classList.remove('on');
+}
+function paintAdd(lv){
+  state.addLv=lv;
+  const L=LEVELS[lv];
+  document.getElementById('am-card').style.background=L.color;
+  document.getElementById('am-head').textContent=L.quote;
+  document.getElementById('am-face').innerHTML=face(lv);
+  document.getElementById('am-knob').style.left=((lv-1)/4*100)+'%';
+}
+function amCount(){
+  const v=document.getElementById('am-text').value;
+  document.getElementById('am-count').textContent=v.length+'/40';
+  document.getElementById('am-check').classList.toggle('ready',v.trim().length>0);
+}
+function toggleAddPub(){
+  state.addPub=!state.addPub;
+  document.getElementById('am-pub').classList.toggle('off',!state.addPub);
+  toast(state.addPub?'모두의 할 일에 보여요 — 응원을 받을 수 있어요':'나만 볼 수 있어요');
+}
+function addTodo(){
+  const text=document.getElementById('am-text').value.trim();
+  if(!text){ toast('할 일을 적어주세요!'); return; }
+  if(state.editId){
+    const t=MY_TODOS.find(x=>x.id===state.editId);
+    t.text=text; t.lv=state.addLv; t.pub=state.addPub; t.alarm=state.addAlarm; t.pinned=state.addPinned;
+    closeAdd(); go('main');
+    toast('수정했어요');
+    return;
+  }
+  MY_TODOS.unshift({ id:nextId++, text, lv:state.addLv, pub:state.addPub, pinned:state.addPinned, alarm:state.addAlarm, cheers:{like:0,cheer:0,heart:0}, cheerers:[] });
+  closeAdd();
+  go('main');
+  let msg = state.addPub?'추가했어요! 모두의 할 일에도 올라갔어요':'추가했어요! 나만 보여요';
+  if(state.addAlarm) msg+=` · ${state.addAlarm.t} 알림`;
+  toast(msg);
+}
+/* 슬라이더 드래그 */
+(function(){
+  const sl=document.getElementById('am-slider');
+  function set(e){
+    const r=sl.getBoundingClientRect();
+    const x=(e.touches?e.touches[0].clientX:e.clientX);
+    const t=Math.min(1,Math.max(0,(x-r.left)/r.width));
+    paintAdd(Math.round(t*4)+1);
+  }
+  sl.addEventListener('pointerdown',e=>{
+    set(e);
+    const mv=ev=>set(ev);
+    const up=()=>{ window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); };
+    window.addEventListener('pointermove',mv);
+    window.addEventListener('pointerup',up);
+  });
+})();
+
+/* ── 알림 팝업 ── */
+const alarmSel={ ampm:'오전', h:9, m:'30', days:new Set() };
+function buildWheel(id,items,cur,key){
+  const el=document.getElementById(id);
+  el.innerHTML=items.map(v=>`<div class="${String(v)===String(cur)?'sel':''}" data-v="${v}">${v}</div>`).join('');
+  el.querySelectorAll('div').forEach(d=>d.onclick=()=>{
+    alarmSel[key]=d.dataset.v;
+    el.querySelectorAll('div').forEach(x=>x.classList.remove('sel'));
+    d.classList.add('sel');
+    d.scrollIntoView({block:'center',behavior:'smooth'});
+  });
+  const sel=el.querySelector('.sel'); if(sel) setTimeout(()=>sel.scrollIntoView({block:'center'}),30);
+}
+function openAlarm(){
+  buildWheel('wh-ampm',['오전','오후'],alarmSel.ampm,'ampm');
+  buildWheel('wh-h',[1,2,3,4,5,6,7,8,9,10,11,12],alarmSel.h,'h');
+  buildWheel('wh-m',['00','05','10','15','20','25','30','35','40','45','50','55'],alarmSel.m,'m');
+  const days=document.getElementById('days');
+  days.innerHTML=['일','월','화','수','목','금','토'].map(d=>
+    `<button class="${alarmSel.days.has(d)?'on':''}" onclick="toggleDay(this,'${d}')">${d}</button>`).join('');
+  document.getElementById('alarmpop').classList.add('on');
+}
+function toggleDay(btn,d){
+  if(alarmSel.days.has(d)) alarmSel.days.delete(d); else alarmSel.days.add(d);
+  btn.classList.toggle('on');
+}
+function saveAlarm(){
+  const t=`${alarmSel.ampm} ${alarmSel.h}:${alarmSel.m}`;
+  state.addAlarm={ t, days:['일','월','화','수','목','금','토'].filter(d=>alarmSel.days.has(d)) };
+  document.getElementById('alarmpop').classList.remove('on');
+  syncAlarmBadge();
+  toast(state.addAlarm.days.length
+    ? `매주 ${state.addAlarm.days.join('·')} ${t}에 알림이 와요`
+    : `오늘 ${t}에 알림이 와요`);
+}
+function cancelAlarm(){
+  state.addAlarm=null;
+  document.getElementById('alarmpop').classList.remove('on');
+  syncAlarmBadge();
+  toast('알림 없이 추가할게요');
+}
+function syncAlarmBadge(){
+  document.getElementById('am-abadge').style.display=state.addAlarm?'block':'none';
+}
+
+/* ══ 완료한 일 ══ */
+function syncSeg(){
+  ['day','week','month'].forEach(k=>document.getElementById('seg-'+k).classList.toggle('on',state.doneView===k));
+}
+function setDoneView(v){ state.doneView=v; syncSeg(); renderDone(); }
+function renderDone(){
+  stopPhys();
+  const c2=document.getElementById('todo-count2'); if(c2) c2.textContent=MY_TODOS.length;
+  const body=document.getElementById('done-body');
+  if(state.doneView==='day'){
+    body.innerHTML=DONE_LOG.map((g,gi)=>`
+      <div class="datehead">${g.date}<button onclick="toast('프로토타입: 날짜 삭제는 생략했어요')">${ic('trash',17)}</button></div>
+      ${g.items.map((it,ii)=>`
+        <div class="drow" style="background:${LEVELS[it.lv].color}">
+          ${face(it.lv)}
+          <div class="dtext">${it.text}</div>
+          <button class="undo" onclick="restoreItem(${gi},${ii})">${ic('restore',15)}</button>
+        </div>`).join('')}
+    `).join('');
+  } else {
+    const groups = state.doneView==='week' ? WEEKS : MONTHS;
+    body.innerHTML=groups.map(g=>`
+      <div class="weekhead">${g.label}<button onclick="toast('프로토타입: 삭제는 생략했어요')">${ic('trash',17)}</button></div>
+      <div class="wbox" data-balls='${JSON.stringify(g.balls)}' style="background:${g.tint}">
+        <button class="wdown" onclick="toast('이미지로 저장되는 자리예요 (SNS 공유 진입점 후보)')">${ic('down',15)}</button>
+      </div>
+    `).join('')+`<div class="gyronote">실제 앱은 자이로센서로 움직여요 · 웹 데모: 마우스를 좌우로 움직여보세요</div>`;
+    buildPhysics();
+  }
+}
+function restoreItem(gi,ii){
+  const it=DONE_LOG[gi].items.splice(ii,1)[0];
+  if(!DONE_LOG[gi].items.length) DONE_LOG.splice(gi,1);
+  MY_TODOS.unshift({ id:nextId++, text:it.text, lv:it.lv, pub:false, alarm:null, cheers:{like:0,cheer:0,heart:0} });
+  toast('할 일로 돌아갔어요');
+  renderDone();
+}
+
+/* ── 알갱이 물리 ── */
+const phys={ boxes:[], raf:null, g:{x:0,y:0.42} };
+function buildPhysics(){
+  stopPhys();
+  phys.boxes=[...document.querySelectorAll('.wbox')].map(el=>{
+    const w=el.clientWidth, h=el.clientHeight;
+    const lvs=JSON.parse(el.dataset.balls);
+    const balls=lvs.map(lv=>{
+      const b=document.createElement('div');
+      b.className='wball'; b.style.background=LEVELS[lv].color;
+      b.innerHTML=face(lv);
+      el.appendChild(b);
+      return { el:b, x:24+Math.random()*(w-48), y:20+Math.random()*(h-70),
+               vx:(Math.random()-0.5)*3, vy:0, r:18 };
+    });
+    return { w, h, balls };
+  });
+  phys.raf=requestAnimationFrame(stepPhys);
+}
+function stepPhys(){
+  for(const box of phys.boxes){
+    const {w,h,balls}=box;
+    for(const b of balls){
+      b.vx+=phys.g.x; b.vy+=phys.g.y;
+      b.vx*=0.985; b.vy*=0.985;
+      b.x+=b.vx; b.y+=b.vy;
+      if(b.x<b.r){b.x=b.r;b.vx*=-0.45} if(b.x>w-b.r){b.x=w-b.r;b.vx*=-0.45}
+      if(b.y<b.r){b.y=b.r;b.vy*=-0.45} if(b.y>h-b.r){b.y=h-b.r;b.vy*=-0.45}
+    }
+    for(let i=0;i<balls.length;i++)for(let j=i+1;j<balls.length;j++){
+      const a=balls[i], c=balls[j];
+      const dx=c.x-a.x, dy=c.y-a.y;
+      const d=Math.hypot(dx,dy)||0.01, min=a.r+c.r-2;
+      if(d<min){
+        const o=(min-d)/2, nx=dx/d, ny=dy/d;
+        a.x-=nx*o; a.y-=ny*o; c.x+=nx*o; c.y+=ny*o;
+        a.vx-=nx*o*0.12; a.vy-=ny*o*0.12; c.vx+=nx*o*0.12; c.vy+=ny*o*0.12;
+      }
+    }
+    balls.forEach(b=>b.el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`);
+  }
+  phys.raf=requestAnimationFrame(stepPhys);
+}
+function stopPhys(){
+  if(phys.raf){ cancelAnimationFrame(phys.raf); phys.raf=null; }
+  phys.boxes=[];
+}
+document.getElementById('phone').addEventListener('mousemove',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  phys.g.x=((e.clientX-r.left)/r.width-0.5)*0.9;
+});
+window.addEventListener('deviceorientation',e=>{
+  if(e.gamma!=null) phys.g.x=Math.max(-1,Math.min(1,e.gamma/45))*0.9;
+});
+
+/* ══ 설정 ══ */
+function renderSettings(){
+  const top=document.getElementById('set-top');
+  const blobs=[
+    {lv:5,x:46,y:38,s:56},{lv:3,x:145,y:78,s:46},{lv:1,x:200,y:78,s:46},
+    {lv:4,x:255,y:78,s:46},{lv:2,x:330,y:70,s:50},
+  ];
+  top.innerHTML=blobs.map(b=>
+    `<div class="blob" style="left:${b.x-b.s/2}px;top:${b.y}px;width:${b.s}px;height:${b.s}px;background:${LEVELS[b.lv].color}">${face(b.lv)}</div>`
+  ).join('');
+  document.getElementById('eye-swatch').innerHTML=face(1);
+  document.getElementById('set-defpub').classList.toggle('on',state.defPub);
+  syncCheerNoti();
+  if(!document.getElementById('set-mytype').innerHTML.trim())
+    document.getElementById('set-mytype').innerHTML=`${tico(state.myType,14)} ${TYPES[state.myType].ko} 타입 <span class="chev">›</span>`;
+}
+function toggleDefPub(){
+  state.defPub=!state.defPub;
+  document.getElementById('set-defpub').classList.toggle('on',state.defPub);
+  toast(state.defPub?'새 할 일이 기본으로 공개돼요 (추가할 때 끌 수 있어요)':'새 할 일이 기본으로 비공개예요');
+}
+const CHEER_NOTI=['없음 · 들어와서 확인','아침에 모아서 1번'];
+function cycleCheerNoti(){
+  state.cheerNoti=(state.cheerNoti+1)%2;
+  syncCheerNoti();
+  toast(state.cheerNoti===0
+    ?'응원은 앱을 열었을 때만 보여요 (추천)'
+    :'아침 할 일 알림에 응원 소식을 한 줄 얹어서 보내드려요');
+}
+function syncCheerNoti(){
+  document.getElementById('set-cheernoti').innerHTML=CHEER_NOTI[state.cheerNoti]+' <span class="chev">›</span>';
+}
+function openSub(){
+  document.getElementById('dim').classList.add('on');
+  document.getElementById('subsheet').classList.add('on');
+  document.getElementById('dim').onclick=()=>{ closeSub(); document.getElementById('dim').onclick=closeSheet; };
+}
+function closeSub(){ document.getElementById('subsheet').classList.remove('on'); document.getElementById('dim').classList.remove('on'); }
+function selPlan(p,el){
+  document.querySelectorAll('.plan').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+/* ══ 위젯 ══ */
+function renderWidget(){
+  const rows=t=>`<div class="wg-row" style="background:${LEVELS[t.lv].color}">${face(t.lv)}<span>${t.text}</span></div>`;
+  const items=MY_TODOS.slice(0,5);
+  document.getElementById('wg-current').innerHTML=items.map(rows).join('')+`<div class="pl">${ic('plus',18)}</div>`;
+  document.getElementById('wg-propA').innerHTML=items.slice(0,4).map(rows).join('')
+    +`<div class="wg-strip">${ic('mega',13)} 응원 ${allCheers()}개가 기다려요 <span style="margin-left:auto;opacity:.7">열어서 확인 ›</span></div>`
+    +`<div class="pl">${ic('plus',18)}</div>`;
+  document.getElementById('wg-sm-blob').innerHTML=face(4);
+  document.getElementById('wg-sm-blob2').innerHTML=face(1);
+  document.getElementById('wg-sm-cheer').innerHTML=`${ic('mega',11)} 응원 ${allCheers()}개 대기`;
+}
+
+/* ── 모두의 할 일 ── */
+function setFilter(f,btn){
+  state.filter=f;
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderPeople();
+}
+function renderPeople(){
+  let list=PEOPLE;
+  if(state.filter==='same') list=PEOPLE.filter(p=>p.lv===state.myLevel);
+  if(state.filter==='fav')  list=PEOPLE.filter(p=>p.fav);
+  document.getElementById('people-list').innerHTML = list.length ? list.map(p=>{
+    const T=TYPES[p.el];
+    const shown = p.showKo && p.ko ? p.ko : p.text;
+    return `<div class="pcard">
+      <div class="top" onclick="openProfile(${p.id})" style="cursor:pointer">
+        <div class="blob" style="background:${LEVELS[p.lv].color}">${face(p.lv)}</div>
+        <div>
+          <div class="who">${p.city}의 누군가</div>
+          <div class="type">${tico(p.el,12)} ${T.ko} 타입 · ${LEVELS[p.lv].label}</div>
+        </div>
+        <button class="fav ${p.fav?'on':''}" onclick="event.stopPropagation();toggleFav(${p.id})">${ic(p.fav?'starf':'star',20)}</button>
+      </div>
+      <div class="ptext">${shown}</div>
+      ${p.ko?`<span class="trans" onclick="toggleTrans(${p.id})">${p.showKo?'원문 보기':'한국어로 보기'}</span>`:''}
+      <div class="reacts">
+        ${REACTS.map(r=>`<button class="${p.sent[r.k]?'sent':''}" onclick="react(${p.id},'${r.k}')">${ic(r.icn,14)} ${p.cheers[r.k]}</button>`).join('')}
+      </div>
+    </div>`;
+  }).join('') : `<div class="card" style="text-align:center;padding:30px 20px">
+      <div style="color:#d8cfb4">${ic('star',34)}</div>
+      <p class="sub" style="margin-top:8px">아직 찜한 사람이 없어요.<br>마음에 드는 캐릭터의 별을 눌러보세요.</p></div>`;
+}
+function react(id,k){
+  const p=PEOPLE.find(x=>x.id===id);
+  if(p.sent[k]){ p.sent[k]=false; p.cheers[k]--; }
+  else { p.sent[k]=true; p.cheers[k]++;
+    toast(`${REACTS.find(r=>r.k===k).ko}를 보냈어요 · 알림은 안 가요, 그 사람이 열면 보여요`); }
+  renderPeople();
+}
+function toggleFav(id){
+  const p=PEOPLE.find(x=>x.id===id);
+  p.fav=!p.fav;
+  toast(p.fav?'찜했어요 — 이 사람 할 일을 계속 볼 수 있어요':'찜을 해제했어요');
+  renderPeople();
+}
+function toggleTrans(id){
+  const p=PEOPLE.find(x=>x.id===id);
+  p.showKo=!p.showKo;
+  renderPeople();
+}
+
+/* ══ 오늘의 운세 ══ */
+const F_MAIN={ fire:'몰아치지 말고 나눠서 하면 술술 풀리는 날', water:'흐름을 타면 어려운 일도 스르륵 넘어가는 날',
+  wood:'하나씩 쌓다 보면 저녁쯤 뿌듯해지는 날', earth:'중심만 잡으면 흔들릴 일 없는 날', metal:'끊을 걸 끊으면 두 배로 가벼워지는 날' };
+const F_WARN={ fire:'5단계 할 일은 오전에 해치우기', water:'미루다 밤에 몰리지 않게 조심',
+  wood:'남의 부탁에 내 일이 밀리지 않게', earth:'다 떠안지 말기 — 3개면 충분해요', metal:'너무 자르다 소중한 약속까지 자르지 않게' };
+function computeFortune(){
+  const ti=TKEYS.indexOf(state.myType), day=26;
+  state.stars=3+((day+ti)%3);
+  state.luckyLv=((day+ti*2)%5)+1;
+  const times=['오전 7~9시','오전 10~12시','오후 2~4시','오후 5~7시','밤 9~11시'];
+  state.luckyTime=times[(day+ti)%5];
+  renderHanmadi();
+  renderFortune();
+}
+
+/* 기간별 운세 */
+const F_WEEK={ fire:'초반에 몰아붙이면 목요일부터 여유로워요', water:'중반의 변수도 흘려보내면 무난한 주',
+  wood:'매일 조금씩 — 주말에 결과가 보여요', earth:'맡은 것만 지켜도 든든한 한 주', metal:'화요일에 정리 한 번 하면 쭉 풀려요' };
+const F_MONTH={ fire:'2째 주에 불이 제대로 붙는 달', water:'서두르지 않아도 알아서 흘러가는 달',
+  wood:'심어둔 게 자라기 시작하는 달', earth:'기반 다지기 좋은 달', metal:'버릴 걸 정하면 새 게 들어오는 달' };
+const F_YEAR={ fire:'하반기에 크게 타오르는 해', water:'흐름이 바뀌는 해 — 터닝포인트를 잡아요',
+  wood:'뿌리가 깊어지는 해, 결실은 가을에', earth:'단단해지는 해 — 흔들려도 중심은 그대로', metal:'끊고 새로 시작하는 해' };
+const DAYNAMES=['일','월','화','수','목','금','토'];
+function setFPeriod(p){ state.fPeriod=p; state.fDetail=false; renderFortune(); }
+function toggleFDetail(){ state.fDetail=!state.fDetail; renderFortune(); }
+function renderFortune(){
+  const ti=TKEYS.indexOf(state.myType), T=TYPES[state.myType], p=state.fPeriod||'today';
+  document.querySelectorAll('#ftabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  document.getElementById('ff-type').innerHTML=`${tico(state.myType,14)} ${T.ko} 타입`;
+  const fb=document.getElementById('ff-blob'); fb.style.background=T.color; fb.innerHTML=face(1);
+  const row=(k,v)=>`<div class="ffrow"><b>${k}</b><span>${v}</span></div>`;
+  let stars, main, rows='', detail='', data='';
+  if(p==='today'){
+    stars=state.stars; main=F_MAIN[state.myType];
+    const L=LEVELS[state.luckyLv];
+    rows=row('행운의 색',`<i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${L.color};margin-right:5px;vertical-align:-1px"></i>${state.luckyLv}단계 색 할 일부터!`)
+        +row('행운의 시간',state.luckyTime);
+    detail=row('조심할 것',F_WARN[state.myType])
+        +row('하루 흐름','아침 워밍업 · 낮 골든타임 · 저녁 마무리만');
+    data='별만 보고 쓰지 않았어요 — 지난 7일 너의 진짜 기록이 반 섞여 있어요';
+  } else if(p==='week'){
+    stars=3+((ti+1)%3); main=F_WEEK[state.myType];
+    const best=DAYNAMES[(ti+3)%7], warn=DAYNAMES[(ti+5)%7];
+    rows=row('최고의 날',`${best}요일 — 큰 일은 이날에`)+row('조심할 날',`${warn}요일 — 약속은 가볍게`);
+    const dots=DAYNAMES.map((d,i)=>{ const lv=((ti+i*2)%5)+1, b=d===best;
+      return `<div style="text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:${LEVELS[lv].color};margin:0 auto;${b?'box-shadow:0 0 0 3px #F5A623':''}"></div><div style="font-size:10px;font-weight:700;margin-top:3px;color:#8a8272">${d}</div></div>`; }).join('');
+    detail=`<div style="display:flex;justify-content:space-between;padding:10px 2px 4px">${dots}</div>`
+        +row('주간 조언','수요일까지 절반만 끝내면 뒤가 편해요');
+    data='요일별 기운엔 지난 4주 너의 완료 패턴이 반영됐어요';
+  } else if(p==='month'){
+    stars=3+((ti+2)%3); main=F_MONTH[state.myType];
+    rows=row('잘 풀리는 주',`${(ti%4)+1}째 주 — 큰 결정은 여기에`)+row('재충전 주',`${((ti+2)%4)+1}째 주 — 쉬어가기`);
+    const g=[0,1,2,3].map(i=>{ const w=45+((ti*7+i*17)%50);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0"><span style="font-size:11px;font-weight:800;color:#8a8272;width:46px">${i+1}째 주</span><div style="flex:1;height:8px;background:#F1E8CF;border-radius:99px"><div style="width:${w}%;height:100%;border-radius:99px;background:${LEVELS[((i+ti)%5)+1].color}"></div></div></div>`; }).join('');
+    detail=g+row('월간 조언','큰 결정은 잘 풀리는 주에 몰아주세요');
+    data='주차별 기운 게이지는 이번 달 기록으로 매주 갱신돼요';
+  } else {
+    stars=4+(ti%2); main=F_YEAR[state.myType];
+    const bestM=((ti+9)%12)+1;
+    rows=row('최고의 달',`${bestM}월`)+row('터닝포인트',`${((ti+4)%12)+1}월`);
+    const dots12=Array.from({length:12},(_,i)=>{ const lv=((ti+i)%5)+1, b=(i+1)===bestM;
+      return `<div style="text-align:center"><div style="width:18px;height:18px;border-radius:50%;background:${LEVELS[lv].color};margin:0 auto;${b?'box-shadow:0 0 0 2.5px #F5A623':''}"></div><div style="font-size:9px;font-weight:700;color:#8a8272;margin-top:2px">${i+1}</div></div>`; }).join('');
+    detail=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:10px 2px 4px">${dots12}</div>`
+        +row('올해 조언','상반기엔 씨 뿌리고, 하반기에 거둬요');
+    data='연간 운세는 프리미엄 후보 — 팀과 논의해보세요';
+  }
+  document.getElementById('ff-stars').textContent='★'.repeat(Math.min(stars,5))+'☆'.repeat(Math.max(0,5-stars));
+  document.getElementById('ff-main').textContent=main;
+  document.getElementById('ff-body').innerHTML=rows+(state.fDetail?detail:'');
+  document.getElementById('ff-detailbtn').textContent=state.fDetail?'간단히 보기 ▴':'상세보기 ▾';
+  document.getElementById('ff-data').textContent=data;
+}
+function openFortune(){
+  if(!state.birthSet){ toast('먼저 생일을 알려줘요 — 10초면 끝!'); go('start'); return; }
+  state.fPeriod='today'; state.fDetail=false; state.fRevealed=true;
+  renderFortune();
+  document.getElementById('fmodal').classList.add('on');
+}
+function closeFortune(){
+  document.getElementById('fmodal').classList.remove('on');
+  renderHanmadi();   /* 상세를 봤으니 오늘은 전체 공개 유지 */
+}
+
+/* 친구 궁합 (오행 상생·상극) */
+const SANG={wood:'fire',fire:'earth',earth:'metal',metal:'water',water:'wood'};
+const GEUK={wood:'earth',earth:'water',water:'fire',fire:'metal',metal:'wood'};
+function openGunghap(){
+  document.getElementById('fmodal').classList.remove('on');
+  document.getElementById('gh-result').innerHTML='';
+  document.getElementById('dim').classList.add('on');
+  document.getElementById('ghsheet').classList.add('on');
+  document.getElementById('dim').onclick=()=>{ closeGunghap(); document.getElementById('dim').onclick=closeSheet; };
+}
+function closeGunghap(){
+  document.getElementById('ghsheet').classList.remove('on');
+  document.getElementById('dim').classList.remove('on');
+}
+function calcGunghap(){
+  const v=document.getElementById('gh-date').value || '1996-03-02';
+  const [y,m,d]=v.split('-').map(Number);
+  const ft=TKEYS[(y+m+d)%5];
+  const A=TYPES[state.myType], B=TYPES[ft];
+  let score,line;
+  if(SANG[state.myType]===ft){ score=93; line=`${A.ko} 타입이 ${B.ko} 타입을 살려주는 사이 — 네가 큰 힘이 돼요`; }
+  else if(SANG[ft]===state.myType){ score=91; line=`${B.ko} 타입이 ${A.ko} 타입을 살려주는 사이 — 곁에 있으면 힘이 나요`; }
+  else if(ft===state.myType){ score=82; line='완전 닮은꼴 — 서로를 제일 잘 이해해요'; }
+  else if(GEUK[state.myType]===ft || GEUK[ft]===state.myType){ score=64; line='가끔 부딪히지만, 그만큼 서로 배우는 게 많은 사이'; }
+  else { score=76; line='무난하게 잘 맞는 사이'; }
+  document.getElementById('gh-result').innerHTML=`
+    <div class="gh-vs">
+      <div style="text-align:center">
+        <div class="blob" style="width:60px;height:60px;background:${A.color};margin:0 auto">${face(1)}</div>
+        <div style="font-size:12px;font-weight:800;margin-top:6px">나 ${tico(state.myType,12)}</div>
+      </div>
+      <div class="gh-score">${score}%</div>
+      <div style="text-align:center">
+        <div class="blob" style="width:60px;height:60px;background:${B.color};margin:0 auto">${face(1)}</div>
+        <div style="font-size:12px;font-weight:800;margin-top:6px">친구 ${tico(ft,12)}</div>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:14.5px;font-weight:700;margin-top:12px;line-height:1.5">${line}</p>
+    <button class="btn ghost" onclick="toast('궁합 카드가 이미지로 공유돼요 — 친구를 데려오는 문!')">친구한테 자랑하기</button>`;
+}
+
+/* ── toast ── */
+let toastTimer=null;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg; t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('on'),2100);
+}
+
+/* ── init ── */
+document.querySelectorAll('.ico').forEach(e=>{ e.innerHTML=ic(e.dataset.i, +e.dataset.s||16); });
+document.getElementById('start-blob').innerHTML=face(1);
+computeFortune();
+go('main');   /* 첫 진입: 상단 카드가 "운세 도착 — 생일 알려주고 열어보기" 상태 */
+</script>
+</body>
+</html>
