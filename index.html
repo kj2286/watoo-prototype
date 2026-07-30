@@ -61,6 +61,34 @@
   .hdchip { background:#F1E8CF; border-radius:99px; padding:5px 10px; font-size:12px;
     font-weight:800; color:#6b6350; display:inline-flex; gap:4px; align-items:center; }
 
+  /* ── 새 메인 구조: 인사 + 얼굴 행 + 말풍선 + 독 ── */
+  .topbar { display:flex; align-items:flex-start; padding:8px 2px 0; }
+  .topbar .icons { margin-left:auto; display:flex; gap:10px; align-items:center; }
+  .dateline { font-size:21px; font-weight:800; letter-spacing:-.5px; }
+  .datesub { font-size:12.5px; color:#a89b85; font-weight:700; margin-top:2px; }
+  .facerow { display:flex; gap:12px; overflow-x:auto; padding:14px 2px 0; scrollbar-width:none; align-items:flex-start; }
+  .facerow::-webkit-scrollbar { display:none; }
+  .favitem { position:relative; }
+  .favitem.me .ring { width:56px; height:56px; border-width:3px; }
+  .favitem.me .blob { width:46px; height:46px; }
+  .newdot { position:absolute; top:1px; right:3px; width:11px; height:11px; border-radius:50%;
+    background:#FF5226; border:2.5px solid #FFF9E8; }
+  .bubble { position:relative; background:#fff; border-radius:18px; padding:12px 15px; margin-top:12px;
+    box-shadow:0 1px 6px rgba(80,60,20,.06); cursor:pointer; display:flex; gap:8px; align-items:center; }
+  .bubble::before { content:''; position:absolute; top:-6px; left:22px; width:13px; height:13px;
+    background:#fff; transform:rotate(45deg); border-radius:3px; }
+  .bubble .msg { flex:1; font-size:14px; font-weight:700; letter-spacing:-.3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dock { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:20;
+    background:#fff; border-radius:99px; padding:9px 22px; display:flex; align-items:center; gap:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.18); }
+  .dockbtn { border:none; background:none; cursor:pointer; color:#5c5344; position:relative; display:flex; padding:5px; }
+  .dockbtn .dockn { position:absolute; top:-3px; right:-7px; background:#FF5226; color:#fff;
+    font-size:9.5px; font-weight:800; border-radius:99px; padding:1.5px 5px; }
+  .dockplus { width:52px; height:52px; border-radius:50%; border:none; cursor:pointer;
+    background:#1d1d1d; color:#FFF3D6; display:flex; align-items:center; justify-content:center;
+    margin-top:-20px; box-shadow:0 6px 16px rgba(0,0,0,.3); }
+
   /* ── 찜한 사람 스토리 행 ── */
   .favrow { display:flex; gap:11px; overflow-x:auto; padding:11px 2px 2px; scrollbar-width:none; }
   .favrow::-webkit-scrollbar { display:none; }
@@ -445,31 +473,33 @@
   <section class="screen" id="scr-main">
     <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
     <div class="content">
-      <div class="head">
-        <span class="tab on">할 일(<span id="todo-count">5</span>)</span>
-        <span class="tab" onclick="go('done')">완료한 일</span>
+      <div class="topbar">
+        <div>
+          <div class="dateline">7월 26일 일요일</div>
+          <div class="datesub">할 일 <b id="todo-count" style="color:#FF5226">5</b>개 남았어요</div>
+        </div>
         <div class="icons">
           <span class="hdchip" id="hd-cheer" title="도착한 응원"></span>
-          <button class="plainI" onclick="go('widget')" title="위젯"><span class="ico" data-i="grid" data-s="20"></span></button>
+          <button class="plainI" onclick="go('settings')" title="설정"><span class="ico" data-i="gear" data-s="20"></span></button>
         </div>
       </div>
 
-      <div class="hanmadi" id="hanmadi" onclick="openFortune()">
-        <div class="blob mini" id="hm-blob" style="background:#FFC93F"></div>
-        <div style="flex:1;min-width:0">
-          <b id="hm-label"></b>
-          <div class="msg" id="hm-msg"></div>
-        </div>
-        <span style="color:#c9bfa4;font-weight:800;font-size:17px;flex:none">›</span>
-      </div>
+      <!-- 얼굴 행: 나 + 찜한 사람 -->
+      <div class="facerow" id="facerow"></div>
 
-      <!-- 찜한 사람 (스토리 행: 링 색 = 오늘 바쁨 단계) -->
-      <div class="favrow" id="favrow"></div>
+      <!-- 내 캐릭터의 말풍선 = 오늘의 운세 -->
+      <div class="bubble" id="hanmadi" onclick="openFortune()">
+        <span class="msg" id="hm-msg"></span>
+        <span style="color:#c9bfa4;font-weight:800;flex:none">›</span>
+      </div>
 
       <div class="grid" id="todo-grid"></div>
     </div>
-    <button class="addbtn" onclick="openAdd()"><span class="ico" data-i="plus" data-s="24"></span></button>
-    <button class="setbtn" onclick="go('settings')"><span class="ico" data-i="gear" data-s="22"></span></button>
+    <div class="dock">
+      <button class="dockbtn" onclick="go('done')" title="완료한 일"><span class="ico" data-i="jar" data-s="25"></span><span class="dockn" id="dock-done">2</span></button>
+      <button class="dockplus" onclick="openAdd()"><span class="ico" data-i="plus" data-s="24"></span></button>
+      <button class="dockbtn" onclick="go('everyone')" title="모두의 할 일"><span class="ico" data-i="globe" data-s="24"></span></button>
+    </div>
   </section>
 
   <!-- ══ 할 일 추가/수정 모달 ══ -->
@@ -534,8 +564,8 @@
     <div class="statusbar"><span>9:41</span><span class="logo">watoo</span><span class="ico" data-i="battery" data-s="22"></span></div>
     <div class="content">
       <div class="head">
-        <span class="tab" onclick="go('main')">할 일(<span id="todo-count2">5</span>)</span>
-        <span class="tab on">완료한 일</span>
+        <button class="plainI" onclick="go('main')" style="margin-right:2px"><span class="ico" data-i="back" data-s="22"></span></button>
+        <span class="tab on" style="color:#222">완료한 일</span>
       </div>
       <div class="segrow">
         <div class="seg">
@@ -547,8 +577,6 @@
       </div>
       <div id="done-body"></div>
     </div>
-    <button class="addbtn" onclick="openAdd()"><span class="ico" data-i="plus" data-s="24"></span></button>
-    <button class="setbtn" onclick="go('settings')"><span class="ico" data-i="gear" data-s="22"></span></button>
   </section>
 
   <!-- ══ 설정 ══ -->
@@ -787,6 +815,7 @@ const ICON_PATHS={
   x:'<path d="M6 6l12 12M18 6L6 18"/>',
   back:'<path d="M15 5l-7 7 7 7"/>',
   share:'<path d="M12 3v12M8 6.5L12 3l4 3.5"/><path d="M6 11v9h12v-9"/>',
+  jar:'<path d="M8.5 3h7M7.5 6h9"/><path d="M7.5 6c-1.6 2-2.3 4-2.3 6.8C5.2 17.5 8 21 12 21s6.8-3.5 6.8-8.2c0-2.8-.7-4.8-2.3-6.8"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   check:'<path d="M4.5 12.5l5 5L19.5 6.5"/>',
   restore:'<path d="M3.5 4v6h6"/><path d="M4 13a8.2 8.2 0 102-7L3.5 10"/>',
@@ -980,7 +1009,9 @@ function renderMain(){
   document.getElementById('todo-count').textContent=MY_TODOS.length;
   const c2=document.getElementById('todo-count2'); if(c2) c2.textContent=MY_TODOS.length;
   renderHanmadi();
-  renderFavRow();
+  renderFaceRow();
+  const dd=document.getElementById('dock-done');
+  if(dd) dd.textContent=DONE_LOG[0]?DONE_LOG[0].items.length:0;
   const sorted=[...MY_TODOS].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
   document.getElementById('todo-grid').innerHTML=sorted.map(t=>{
     const n=cheerTotal(t);
@@ -1000,14 +1031,17 @@ function renderMain(){
   }).join('');
 }
 
-/* ── 찜한 사람 스토리 행 (링 색 = 그 사람의 오늘 단계) ── */
-function renderFavRow(){
+/* ── 얼굴 행: 나(운세 진입) + 찜한 사람 (링 색 = 오늘 단계) ── */
+function renderFaceRow(){
   const favs=PEOPLE.filter(p=>p.fav);
-  document.getElementById('favrow').innerHTML=
-    `<button class="favitem disc" onclick="go('everyone')">
-       <div class="ring"><div class="blob">${ic('globe',22)}</div></div>
-       <div class="fname">둘러보기</div>
-     </button>`
+  const me=`<button class="favitem me" onclick="openFortune()">
+       <div class="ring" style="border-color:${LEVELS[state.myLevel].color}">
+         <div class="blob" style="background:${LEVELS[state.myLevel].color}">${face(state.myLevel)}</div>
+       </div>
+       ${state.birthSet&&!state.fRevealed?'<span class="newdot"></span>':''}
+       <div class="fname">나</div>
+     </button>`;
+  document.getElementById('facerow').innerHTML= me
     + favs.map(p=>`
      <button class="favitem" onclick="openProfile(${p.id})">
        <div class="ring" style="border-color:${LEVELS[p.lv].color}">
@@ -1015,7 +1049,7 @@ function renderFavRow(){
        </div>
        <div class="fname">${p.city}</div>
      </button>`).join('')
-    + (favs.length? '' : `<div style="align-self:center;font-size:12px;color:#b3a98f;font-weight:600">모두의 할 일에서 별을 누르면 여기 모여요</div>`);
+    + (favs.length? '' : `<div style="align-self:center;font-size:12px;color:#b3a98f;font-weight:600;padding-top:14px">아래 지구에서 친구를 찜하면 여기 모여요</div>`);
 }
 
 /* ── 탭 판별: 한 번=수정, 두 번=완료 ── */
@@ -1134,29 +1168,17 @@ function maskWords(s){
   return s.split(' ').map((w,i)=> (i%2===1 && w.length>1) ? '*'.repeat(Math.min(8,Math.max(4,w.length*2))) : w).join(' ');
 }
 function renderHanmadi(){
-  const hb=document.getElementById('hm-blob');
-  hb.innerHTML=face(state.myLevel); hb.style.background=LEVELS[state.myLevel].color;
-  const label=document.getElementById('hm-label');
   const msg=document.getElementById('hm-msg');
   const chip=document.getElementById('hd-cheer');
   const n=allCheers();
   chip.style.display=n?'inline-flex':'none';
   chip.innerHTML=`${ic('mega',12)} ${n}`;
   if(!state.birthSet){
-    label.textContent='오늘의 운세';
-    msg.textContent='도착했어요 — 생일 알려주고 열어보기!';
+    msg.textContent='오늘의 운세가 도착했어요 — 생일 알려주고 열어보기!';
     return;
   }
-  const T=TYPES[state.myType];
-  const stars='★'.repeat(state.stars)+'☆'.repeat(5-state.stars);
   const full=F_MAIN[state.myType];
-  if(state.fRevealed){
-    label.innerHTML=`오늘의 운세 · <span style="color:#F5A623">${stars}</span> · ${state.luckyLv}단계 색 할 일 먼저!`;
-    msg.textContent=full;
-  } else {
-    label.innerHTML=`오늘의 운세 · ${T.ko} 타입 · <span style="color:#F5A623">${stars}</span>`;
-    msg.textContent=maskWords(full);
-  }
+  msg.textContent=state.fRevealed?full:maskWords(full);
 }
 function nextDay(){
   state.fRevealed=false;
