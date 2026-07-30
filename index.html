@@ -57,6 +57,18 @@
   .hanmadi .msg { font-size:14.5px; font-weight:700; letter-spacing:-.3px; line-height:1.35; margin-top:2px; }
   .hanmadi .foot { font-size:12px; color:#a89b85; margin-top:9px; font-weight:600; }
 
+  /* ── 찜한 사람 스토리 행 ── */
+  .favrow { display:flex; gap:14px; overflow-x:auto; padding:14px 2px 4px; scrollbar-width:none; }
+  .favrow::-webkit-scrollbar { display:none; }
+  .favitem { flex:none; width:58px; text-align:center; cursor:pointer; border:none; background:none; font-family:inherit; padding:0; }
+  .favitem .blob { width:54px; height:54px; margin:0 auto; box-shadow:0 2px 8px rgba(80,60,20,.12); }
+  .favitem .ring { width:60px; height:60px; border-radius:50%; margin:0 auto;
+    display:flex; align-items:center; justify-content:center; border:3px solid transparent; }
+  .favitem .fname { font-size:10.5px; font-weight:700; color:#8a8272; margin-top:5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .favitem.disc .ring { border:2px dashed #d8cfb4; }
+  .favitem.disc .blob { background:#F4EAD0; box-shadow:none; color:#a89b85; }
+
   /* ── 할 일 카드: 돔형 + 상단 탭 (Figma main_screen_card) ── */
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-top:14px; }
   .tcard {
@@ -433,7 +445,6 @@
         <span class="tab on">할 일(<span id="todo-count">5</span>)</span>
         <span class="tab" onclick="go('done')">완료한 일</span>
         <div class="icons">
-          <button class="circleY" onclick="go('everyone')" title="모두의 할 일"><span class="ico" data-i="globe" data-s="19"></span></button>
           <button class="plainI" onclick="go('widget')" title="위젯"><span class="ico" data-i="grid" data-s="20"></span></button>
         </div>
       </div>
@@ -449,6 +460,9 @@
         </div>
         <div class="foot" id="hm-foot"></div>
       </div>
+
+      <!-- 찜한 사람 (스토리 행: 링 색 = 오늘 바쁨 단계) -->
+      <div class="favrow" id="favrow"></div>
 
       <div class="grid" id="todo-grid"></div>
       <p class="tiny" style="text-align:center;margin-top:14px">카드 한 번 탭 = 수정 · 두 번 탭 = 완료</p>
@@ -965,6 +979,7 @@ function renderMain(){
   document.getElementById('todo-count').textContent=MY_TODOS.length;
   const c2=document.getElementById('todo-count2'); if(c2) c2.textContent=MY_TODOS.length;
   renderHanmadi();
+  renderFavRow();
   const sorted=[...MY_TODOS].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
   document.getElementById('todo-grid').innerHTML=sorted.map(t=>{
     const n=cheerTotal(t);
@@ -982,6 +997,24 @@ function renderMain(){
       <div class="ttext">${t.text}</div>
     </div>`;
   }).join('');
+}
+
+/* ── 찜한 사람 스토리 행 (링 색 = 그 사람의 오늘 단계) ── */
+function renderFavRow(){
+  const favs=PEOPLE.filter(p=>p.fav);
+  document.getElementById('favrow').innerHTML=
+    `<button class="favitem disc" onclick="go('everyone')">
+       <div class="ring"><div class="blob">${ic('globe',22)}</div></div>
+       <div class="fname">둘러보기</div>
+     </button>`
+    + favs.map(p=>`
+     <button class="favitem" onclick="openProfile(${p.id})">
+       <div class="ring" style="border-color:${LEVELS[p.lv].color}">
+         <div class="blob" style="background:${LEVELS[p.lv].color}">${face(p.lv,(p.theme&&p.theme.eyes)||'dot')}</div>
+       </div>
+       <div class="fname">${p.city}</div>
+     </button>`).join('')
+    + (favs.length? '' : `<div style="align-self:center;font-size:12px;color:#b3a98f;font-weight:600">모두의 할 일에서 별을 누르면 여기 모여요</div>`);
 }
 
 /* ── 탭 판별: 한 번=수정, 두 번=완료 ── */
@@ -1038,7 +1071,7 @@ function openCheerers(){
     return `<div class="chrow" onclick="openProfile(${p.id})">
       <div class="blob" style="background:${LEVELS[p.lv].color}">${face(p.lv)}</div>
       <div>
-        <div class="who">${p.city}의 ${T.ko} 타입</div>
+        <div class="who">${p.city}의 ${T.ko} 타입 <span style="color:#c9bfa4;font-weight:800;font-size:14px">›</span></div>
         <div class="sub2">${tico(p.el,11)} ${LEVELS[p.lv].label}</div>
       </div>
       <span class="rx">${ic(r.icn,17)}</span>
@@ -1410,7 +1443,7 @@ function renderPeople(){
       <div class="top" onclick="openProfile(${p.id})" style="cursor:pointer">
         <div class="blob" style="background:${LEVELS[p.lv].color}">${face(p.lv)}</div>
         <div>
-          <div class="who">${p.city}의 누군가</div>
+          <div class="who">${p.city}의 누군가 <span style="color:#c9bfa4;font-weight:800;font-size:15px">›</span></div>
           <div class="type">${tico(p.el,12)} ${T.ko} 타입 · ${LEVELS[p.lv].label}</div>
         </div>
         <button class="fav ${p.fav?'on':''}" onclick="event.stopPropagation();toggleFav(${p.id})">${ic(p.fav?'starf':'star',20)}</button>
