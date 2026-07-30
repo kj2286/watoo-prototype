@@ -416,8 +416,12 @@
       <div style="margin-top:14px" id="type-traits"></div>
       <p class="sub" id="type-desc" style="margin-top:16px"></p>
       <button class="btn" onclick="go('main')">내 할 일 보러 가기 →</button>
+
+      <!-- 타입별 어울리는 테마 (프리미엄 유도) -->
+      <div id="type-theme"></div>
+
       <button class="btn ghost" onclick="shareType()" style="display:flex;align-items:center;justify-content:center;gap:8px"><span class="ico" data-i="share" data-s="17"></span> 내 타입 자랑하기</button>
-      <p class="tiny" style="margin-top:10px">친구가 "나는 무슨 타입이지?" 하고 들어오게 되는 문이에요</p>
+      <p class="tiny" style="margin-top:10px;padding-bottom:20px">친구가 "나는 무슨 타입이지?" 하고 들어오게 되는 문이에요</p>
     </div>
   </section>
 
@@ -909,12 +913,36 @@ function reveal(){
   document.getElementById('type-title').innerHTML=`나는 ${tico(t,22)} ${T.ko} 타입!`;
   document.getElementById('type-traits').innerHTML=T.traits.map(x=>`<span class="chip">${x}</span>`).join('');
   document.getElementById('type-desc').textContent=T.desc;
+  renderTypeTheme();
   document.getElementById('set-mytype').innerHTML=`${tico(t,14)} ${T.ko} 타입 <span class="chev">›</span>`;
   state.birthSet=true; state.fRevealed=false;
   computeFortune();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById('scr-type').classList.add('on');
   document.querySelectorAll('#jump button').forEach(b=>b.classList.remove('on'));
+}
+
+/* 타입별 어울리는 테마 — 5가지 감정 컬러 + 눈 모양 (프리미엄 유도) */
+const TYPE_THEMES={
+  earth:{ name:'따뜻한 대지', eyes:'lash',   pal:['#F5D9A8','#DFBb8B','#C99A6B','#A9764C','#E2603F'], line:'흙 타입의 묵직한 온기를 닮은 5가지 감정 색' },
+  fire :{ name:'노을 무드',   eyes:'round',  pal:['#FFD98E','#FFB37A','#FF8E72','#F56B5C','#D94A3D'], line:'불 타입의 열기를 닮은 노을빛 5가지 감정 색' },
+  water:{ name:'맑은 바다',   eyes:'closed', pal:['#CDEBE8','#9AD5D8','#6FB8D6','#4A94C8','#3B6FB5'], line:'물 타입처럼 유연하게 흐르는 5가지 감정 색' },
+  wood :{ name:'초록 숲',     eyes:'dot',    pal:['#E3EFC0','#BFDE93','#93C46E','#679E52','#3F7240'], line:'나무 타입처럼 자라나는 숲의 5가지 감정 색' },
+  metal:{ name:'미니멀 모노', eyes:'dot',    pal:['#E8E8E4','#C9C9C2','#A3A39C','#75756E','#FF4530'], line:'쇠 타입답게 군더더기 없는 5가지 감정 색' },
+};
+function renderTypeTheme(){
+  const T=TYPES[state.myType], th=TYPE_THEMES[state.myType];
+  document.getElementById('type-theme').innerHTML=`
+    <div class="card" style="text-align:left;position:relative;margin-top:18px;padding:18px 16px 16px">
+      <span style="position:absolute;top:-9px;right:16px;background:#111;color:#F5A623;font-size:10.5px;font-weight:800;border-radius:99px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">${ic('crown',11)} 프리미엄</span>
+      <b style="font-size:12px;color:#a49a80;font-weight:800">${tico(state.myType,12)} ${T.ko} 타입에게 어울리는 테마</b>
+      <div style="font-size:18px;font-weight:800;letter-spacing:-.4px;margin-top:3px">${th.name}</div>
+      <div style="display:flex;justify-content:space-between;gap:6px;margin-top:12px">
+        ${[1,2,3,4,5].map(lv=>`<div class="blob" style="width:52px;height:52px;background:${th.pal[lv-1]}">${face(lv,th.eyes)}</div>`).join('')}
+      </div>
+      <p class="tiny" style="margin-top:10px">${th.line} — 눈·코·입과 얼굴 컬러가 통째로 바뀌어요</p>
+      <button class="btn" style="background:#111;color:#fff;font-size:15px;padding:13px;margin-top:12px" onclick="openSub()">이 테마로 꾸미기</button>
+    </div>`;
 }
 
 /* 타입 공유 (모바일: 네이티브 공유 시트 / 데스크톱: 링크 복사) */
