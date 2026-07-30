@@ -50,24 +50,28 @@
   .head .plainI { background:none; border:none; cursor:pointer; color:#1d1d1d; padding:4px; }
 
   /* ── 오늘의 운세 요약 카드 ── */
-  .hanmadi { background:#fff; border-radius:20px; padding:13px 15px; margin-top:10px; box-shadow:0 2px 10px rgba(80,60,20,.06); cursor:pointer; }
-  .hanmadi .row1 { display:flex; gap:11px; align-items:center; }
-  .hanmadi .mini { width:42px; height:42px; flex:none; }
-  .hanmadi b { font-size:11.5px; color:#b3a98f; font-weight:700; display:block; }
-  .hanmadi .msg { font-size:14.5px; font-weight:700; letter-spacing:-.3px; line-height:1.35; margin-top:2px; }
-  .hanmadi .foot { font-size:12px; color:#a89b85; margin-top:9px; font-weight:600; }
+  .hanmadi { background:#fff; border-radius:18px; padding:10px 14px; margin-top:10px;
+    box-shadow:0 1px 6px rgba(80,60,20,.05); cursor:pointer;
+    display:flex; gap:10px; align-items:center; }
+  .hanmadi .mini { width:36px; height:36px; flex:none; }
+  .hanmadi b { font-size:10.5px; color:#b3a98f; font-weight:700; display:block;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hanmadi .msg { font-size:14px; font-weight:700; letter-spacing:-.3px; margin-top:1px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hdchip { background:#F1E8CF; border-radius:99px; padding:5px 10px; font-size:12px;
+    font-weight:800; color:#6b6350; display:inline-flex; gap:4px; align-items:center; }
 
   /* ── 찜한 사람 스토리 행 ── */
-  .favrow { display:flex; gap:14px; overflow-x:auto; padding:14px 2px 4px; scrollbar-width:none; }
+  .favrow { display:flex; gap:11px; overflow-x:auto; padding:11px 2px 2px; scrollbar-width:none; }
   .favrow::-webkit-scrollbar { display:none; }
-  .favitem { flex:none; width:58px; text-align:center; cursor:pointer; border:none; background:none; font-family:inherit; padding:0; }
-  .favitem .blob { width:54px; height:54px; margin:0 auto; box-shadow:0 2px 8px rgba(80,60,20,.12); }
-  .favitem .ring { width:60px; height:60px; border-radius:50%; margin:0 auto;
-    display:flex; align-items:center; justify-content:center; border:3px solid transparent; }
-  .favitem .fname { font-size:10.5px; font-weight:700; color:#8a8272; margin-top:5px;
+  .favitem { flex:none; width:48px; text-align:center; cursor:pointer; border:none; background:none; font-family:inherit; padding:0; }
+  .favitem .blob { width:40px; height:40px; margin:0 auto; }
+  .favitem .ring { width:48px; height:48px; border-radius:50%; margin:0 auto;
+    display:flex; align-items:center; justify-content:center; border:2.5px solid transparent; }
+  .favitem .fname { font-size:10px; font-weight:700; color:#a89b85; margin-top:4px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .favitem.disc .ring { border:2px dashed #d8cfb4; }
-  .favitem.disc .blob { background:#F4EAD0; box-shadow:none; color:#a89b85; }
+  .favitem.disc .ring { border:1.5px dashed #d8cfb4; }
+  .favitem.disc .blob { background:#F4EAD0; box-shadow:none; color:#b3a98f; }
 
   /* ── 할 일 카드: 돔형 + 상단 탭 (Figma main_screen_card) ── */
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-top:14px; }
@@ -83,9 +87,9 @@
   .tcard > svg { width:54px; }
   .tcard .ttext { font-size:12.5px; font-weight:700; color:rgba(20,10,0,.72); text-align:center; line-height:1.5; letter-spacing:-.2px; word-break:keep-all; }
   .tcard .marks { position:absolute; top:12px; left:12px; right:12px; display:flex; justify-content:space-between; }
-  .tcard .pubmark { background:rgba(255,255,255,.55); border-radius:99px; padding:3px 6px; color:#3d3428; display:inline-flex; align-items:center; gap:2px; }
-  .tcard .cheermark { background:rgba(255,255,255,.88); border-radius:99px; padding:3px 8px; font-weight:800; font-size:11px;
-    box-shadow:0 1px 4px rgba(0,0,0,.12); display:inline-flex; align-items:center; gap:4px; }
+  .tcard .pubmark { color:rgba(0,0,0,.4); display:inline-flex; align-items:center; }
+  .tcard .cheermark { background:rgba(255,255,255,.85); border-radius:99px; padding:2px 7px; font-weight:800; font-size:10.5px;
+    color:#3d3428; display:inline-flex; align-items:center; gap:3px; }
 
   .addbtn {
     position:absolute; bottom:26px; left:50%; transform:translateX(-50%); z-index:20;
@@ -445,27 +449,24 @@
         <span class="tab on">할 일(<span id="todo-count">5</span>)</span>
         <span class="tab" onclick="go('done')">완료한 일</span>
         <div class="icons">
+          <span class="hdchip" id="hd-cheer" title="도착한 응원"></span>
           <button class="plainI" onclick="go('widget')" title="위젯"><span class="ico" data-i="grid" data-s="20"></span></button>
         </div>
       </div>
 
       <div class="hanmadi" id="hanmadi" onclick="openFortune()">
-        <div class="row1">
-          <div class="blob mini" id="hm-blob" style="background:#FFC93F"></div>
-          <div style="flex:1">
-            <b>오늘의 운세 · <span id="hm-type"></span> · <span id="hm-stars" style="color:#F5A623"></span></b>
-            <div class="msg" id="hm-msg"></div>
-          </div>
-          <span style="color:#c9bfa4;font-weight:800;font-size:18px">›</span>
+        <div class="blob mini" id="hm-blob" style="background:#FFC93F"></div>
+        <div style="flex:1;min-width:0">
+          <b id="hm-label"></b>
+          <div class="msg" id="hm-msg"></div>
         </div>
-        <div class="foot" id="hm-foot"></div>
+        <span style="color:#c9bfa4;font-weight:800;font-size:17px;flex:none">›</span>
       </div>
 
       <!-- 찜한 사람 (스토리 행: 링 색 = 오늘 바쁨 단계) -->
       <div class="favrow" id="favrow"></div>
 
       <div class="grid" id="todo-grid"></div>
-      <p class="tiny" style="text-align:center;margin-top:14px">카드 한 번 탭 = 수정 · 두 번 탭 = 완료</p>
     </div>
     <button class="addbtn" onclick="openAdd()"><span class="ico" data-i="plus" data-s="24"></span></button>
     <button class="setbtn" onclick="go('settings')"><span class="ico" data-i="gear" data-s="22"></span></button>
@@ -1135,27 +1136,26 @@ function maskWords(s){
 function renderHanmadi(){
   const hb=document.getElementById('hm-blob');
   hb.innerHTML=face(state.myLevel); hb.style.background=LEVELS[state.myLevel].color;
-  const typeEl=document.getElementById('hm-type');
-  const starsEl=document.getElementById('hm-stars');
+  const label=document.getElementById('hm-label');
   const msg=document.getElementById('hm-msg');
-  const foot=document.getElementById('hm-foot');
-  const cheerLine=`${ic('mega',12)} 응원 <b style="display:inline;color:#222">${allCheers()}</b>개 도착`;
+  const chip=document.getElementById('hd-cheer');
+  const n=allCheers();
+  chip.style.display=n?'inline-flex':'none';
+  chip.innerHTML=`${ic('mega',12)} ${n}`;
   if(!state.birthSet){
-    typeEl.innerHTML=ic('crystal',13); starsEl.textContent='';
-    msg.textContent='오늘의 운세가 도착했어요 — 생일 알려주고 열어보기!';
-    foot.innerHTML=`${cheerLine} · 탭 한 번이면 끝나요`;
+    label.textContent='오늘의 운세';
+    msg.textContent='도착했어요 — 생일 알려주고 열어보기!';
     return;
   }
   const T=TYPES[state.myType];
-  typeEl.innerHTML=`${tico(state.myType,12)} ${T.ko} 타입`;
-  starsEl.textContent='★'.repeat(state.stars)+'☆'.repeat(5-state.stars);
+  const stars='★'.repeat(state.stars)+'☆'.repeat(5-state.stars);
   const full=F_MAIN[state.myType];
   if(state.fRevealed){
+    label.innerHTML=`오늘의 운세 · <span style="color:#F5A623">${stars}</span> · ${state.luckyLv}단계 색 할 일 먼저!`;
     msg.textContent=full;
-    foot.innerHTML=`${cheerLine} · ${ic('sparkle',12)} 오늘은 ${state.luckyLv}단계 색 할 일부터!`;
   } else {
+    label.innerHTML=`오늘의 운세 · ${T.ko} 타입 · <span style="color:#F5A623">${stars}</span>`;
     msg.textContent=maskWords(full);
-    foot.innerHTML=`${cheerLine} · ${ic('sparkle',12)} 행운의 색은 ****? 탭해서 열어보기`;
   }
 }
 function nextDay(){
@@ -1615,6 +1615,7 @@ document.querySelectorAll('.ico').forEach(e=>{ e.innerHTML=ic(e.dataset.i, +e.da
 document.getElementById('start-blob').innerHTML=face(1);
 computeFortune();
 go('main');   /* 첫 진입: 상단 카드가 "운세 도착 — 생일 알려주고 열어보기" 상태 */
+setTimeout(()=>toast('카드 한 번 탭 = 수정 · 두 번 탭 = 완료'),900);   /* 힌트는 1회성 토스트로 */
 </script>
 </body>
 </html>
