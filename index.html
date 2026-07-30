@@ -416,6 +416,8 @@
       <div style="margin-top:14px" id="type-traits"></div>
       <p class="sub" id="type-desc" style="margin-top:16px"></p>
       <button class="btn" onclick="go('main')">내 할 일 보러 가기 →</button>
+      <button class="btn ghost" onclick="shareType()" style="display:flex;align-items:center;justify-content:center;gap:8px"><span class="ico" data-i="share" data-s="17"></span> 내 타입 자랑하기</button>
+      <p class="tiny" style="margin-top:10px">친구가 "나는 무슨 타입이지?" 하고 들어오게 되는 문이에요</p>
     </div>
   </section>
 
@@ -765,6 +767,7 @@ const ICON_PATHS={
   link:'<path d="M9 15l6-6M8.5 12L6 14.5a3.5 3.5 0 105 5l2.5-2.5M15.5 12L18 9.5a3.5 3.5 0 10-5-5L10.5 7"/>',
   x:'<path d="M6 6l12 12M18 6L6 18"/>',
   back:'<path d="M15 5l-7 7 7 7"/>',
+  share:'<path d="M12 3v12M8 6.5L12 3l4 3.5"/><path d="M6 11v9h12v-9"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   check:'<path d="M4.5 12.5l5 5L19.5 6.5"/>',
   restore:'<path d="M3.5 4v6h6"/><path d="M4 13a8.2 8.2 0 102-7L3.5 10"/>',
@@ -912,6 +915,19 @@ function reveal(){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById('scr-type').classList.add('on');
   document.querySelectorAll('#jump button').forEach(b=>b.classList.remove('on'));
+}
+
+/* 타입 공유 (모바일: 네이티브 공유 시트 / 데스크톱: 링크 복사) */
+async function shareType(){
+  const T=TYPES[state.myType];
+  const text=`나는 ${T.ko} 타입! 너는 무슨 타입이야? — watoo`;
+  const url=location.href;
+  if(navigator.share){
+    try{ await navigator.share({title:'watoo — 내 타입', text, url}); toast('공유했어요'); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(`${text} ${url}`); toast('링크를 복사했어요 — 붙여넣어서 공유하세요'); }
+  catch(e){ toast('실제 앱에선 타입 카드가 이미지로 공유돼요'); }
 }
 
 /* ── 메인 ── */
